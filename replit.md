@@ -27,7 +27,7 @@ VibeTrip is a hyper-personalized AI travel agent Expo mobile app that transforms
 - **Frontend**: Expo (React Native), React Navigation 7, TanStack Query
 - **Backend**: Express, TypeScript, Drizzle ORM
 - **Database**: PostgreSQL (Neon)
-- **AI**: Gemini 2.5 Flash via Replit AI Integrations
+- **AI**: Gemini 3.0 Flash via Replit AI Integrations
 
 ## API Endpoints
 - `GET /api/cities` - List all cities
@@ -35,6 +35,7 @@ VibeTrip is a hyper-personalized AI travel agent Expo mobile app that transforms
 - `GET /api/cities/:id/recommendations` - AI-powered recommendations
 - `POST /api/sync/city/:id/places` - Sync Google Places data
 - `POST /api/sync/city/:id/scores` - Calculate all scores
+- `POST /api/routes/generate` - **NEW** Generate personalized itinerary from form data
 - `POST /api/routes/optimize` - Optimize travel route
 - `GET /api/health` - Health check
 
@@ -56,6 +57,14 @@ See `design_guidelines.md` for complete design system including:
 - Vibe score badges (purple 8+, orange 5-7, gray <5)
 
 ## Recent Changes
+- 2026-01-03: Backend API connection for itinerary generation
+  - Upgraded all Gemini models to gemini-3.0-flash (latest)
+  - Created /api/routes/generate endpoint for personalized itinerary generation
+  - Implemented itinerary-generator.ts service with:
+    - Google Places API integration (with Gemini fallback)
+    - Slot-based scheduling (morning/lunch/afternoon/evening)
+    - Vibe weight calculation with protagonist adjustments
+  - Connected TripPlannerScreen to real API (replaced mock data)
 - 2026-01-03: Fixed "Invalid hook call" error on web platform
   - Replaced custom useTheme hook with direct useColorScheme usage across all components
   - Updated ThemedText, ThemedView, Button, Card, all screen components
