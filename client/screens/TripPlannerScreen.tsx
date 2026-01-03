@@ -17,7 +17,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { Brand, Colors, Spacing, BorderRadius } from "@/constants/theme";
 import {
   TripFormData,
@@ -27,6 +26,11 @@ import {
   CURATION_FOCUS_OPTIONS,
   Itinerary,
 } from "@/types/trip";
+
+let DateTimePicker: any = null;
+if (Platform.OS !== "web") {
+  DateTimePicker = require("@react-native-community/datetimepicker").default;
+}
 
 type ScreenState = "Input" | "Loading" | "Result";
 type PickerMode = "startDate" | "startTime" | "endDate" | "endTime" | null;
@@ -78,6 +82,7 @@ export default function TripPlannerScreen() {
   const spinValue = new Animated.Value(0);
   const [pickerMode, setPickerMode] = useState<PickerMode>(null);
   const [tempDate, setTempDate] = useState(new Date());
+  const [showWebInput, setShowWebInput] = useState<PickerMode>(null);
 
   const [formData, setFormData] = useState<TripFormData>({
     birthDate: "1985-06-15",
@@ -101,7 +106,7 @@ export default function TripPlannerScreen() {
           toValue: 1,
           duration: 1500,
           easing: Easing.linear,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== "web",
         })
       ).start();
     }
@@ -123,6 +128,10 @@ export default function TripPlannerScreen() {
 
   const openPicker = (mode: PickerMode) => {
     if (!mode) return;
+    if (Platform.OS === "web") {
+      setShowWebInput(mode);
+      return;
+    }
     let initialDate = new Date();
     if (mode === "startDate") initialDate = parseDate(formData.startDate);
     else if (mode === "endDate") initialDate = parseDate(formData.endDate);
@@ -156,6 +165,18 @@ export default function TripPlannerScreen() {
       setFormData(prev => ({ ...prev, endTime: formatTime(finalDate) }));
     }
     setPickerMode(null);
+  };
+
+  const handleWebInputChange = (value: string) => {
+    if (showWebInput === "startDate") {
+      setFormData(prev => ({ ...prev, startDate: value }));
+    } else if (showWebInput === "endDate") {
+      setFormData(prev => ({ ...prev, endDate: value }));
+    } else if (showWebInput === "startTime") {
+      setFormData(prev => ({ ...prev, startTime: value }));
+    } else if (showWebInput === "endTime") {
+      setFormData(prev => ({ ...prev, endTime: value }));
+    }
   };
 
   const handleGenerate = async () => {
@@ -243,8 +264,40 @@ export default function TripPlannerScreen() {
     }, 6000);
   };
 
+  const renderWebInputModal = () => {
+    if (!showWebInput) return null;
+    const isDate = showWebInput === "startDate" || showWebInput === "endDate";
+    const title = showWebInput === "startDate" ? "시작일" : showWebInput === "endDate" ? "종료일" : showWebInput === "startTime" ? "시작 시간" : "종료 시간";
+    const currentValue = showWebInput === "startDate" ? formData.startDate : showWebInput === "endDate" ? formData.endDate : showWebInput === "startTime" ? formData.startTime : formData.endTime;
+
+    return (
+      <Modal visible transparent animationType="fade">
+        <View style={styles.pickerModalOverlay}>
+          <View style={[styles.webInputModal, { backgroundColor: theme.backgroundRoot }]}>
+            <Text style={[styles.webInputTitle, { color: theme.text }]}>{title}</Text>
+            <TextInput
+              style={[styles.webInputField, { color: theme.text, borderColor: theme.border }]}
+              value={currentValue}
+              onChangeText={handleWebInputChange}
+              placeholder={isDate ? "YYYY-MM-DD" : "HH:MM"}
+              placeholderTextColor={theme.textTertiary}
+              keyboardType={isDate ? "default" : "default"}
+              autoFocus
+            />
+            <Pressable
+              style={[styles.webInputButton, { backgroundColor: Brand.primary }]}
+              onPress={() => setShowWebInput(null)}
+            >
+              <Text style={styles.webInputButtonText}>확인</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   const renderPicker = () => {
-    if (!pickerMode) return null;
+    if (!pickerMode || Platform.OS === "web" || !DateTimePicker) return null;
     const isDate = pickerMode === "startDate" || pickerMode === "endDate";
     const mode = isDate ? "date" : "time";
     const title = pickerMode === "startDate" ? "시작일" : pickerMode === "endDate" ? "종료일" : pickerMode === "startTime" ? "시작 시간" : "종료 시간";
@@ -444,13 +497,14 @@ export default function TripPlannerScreen() {
         </LinearGradient>
       </Pressable>
       {renderPicker()}
+      {renderWebInputModal()}
     </ScrollView>
   );
 
   const renderLoading = () => (
     <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
       <View style={[styles.loadingIconBox, { backgroundColor: `${Brand.primary}15` }]}>
-        <Animated.View style={{ transform: [{ rotate: spin }] }}>
+        <Animated.View style={Platform.OS === "web" ? styles.webSpinner : { transform: [{ rotate: spin }] }}>
           <View style={[styles.spinnerRing, { borderColor: Brand.primary }]} />
         </Animated.View>
         <Feather name="navigation" size={32} color={Brand.primary} style={styles.loadingIcon} />
@@ -614,9 +668,15 @@ const styles = StyleSheet.create({
   pickerCancel: { fontSize: 16, fontWeight: "600" },
   pickerTitle: { fontSize: 16, fontWeight: "700" },
   pickerConfirm: { fontSize: 16, fontWeight: "700" },
+  webInputModal: { position: "absolute", bottom: 0, left: 0, right: 0, padding: Spacing.xl, borderTopLeftRadius: BorderRadius.xl, borderTopRightRadius: BorderRadius.xl },
+  webInputTitle: { fontSize: 18, fontWeight: "700", marginBottom: Spacing.md, textAlign: "center" },
+  webInputField: { fontSize: 18, fontWeight: "600", padding: Spacing.md, borderWidth: 1, borderRadius: BorderRadius.md, marginBottom: Spacing.lg, textAlign: "center" },
+  webInputButton: { paddingVertical: Spacing.md, borderRadius: BorderRadius.md, alignItems: "center" },
+  webInputButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
   loadingIconBox: { width: 96, height: 96, borderRadius: 32, justifyContent: "center", alignItems: "center", marginBottom: Spacing.xl },
   spinnerRing: { position: "absolute", width: 96, height: 96, borderRadius: 32, borderWidth: 4, borderTopColor: "transparent" },
+  webSpinner: {},
   loadingIcon: { position: "absolute" },
   loadingTitle: { fontSize: 24, fontWeight: "900", marginBottom: Spacing.xs },
   loadingMessage: { fontSize: 14, fontWeight: "600" },
