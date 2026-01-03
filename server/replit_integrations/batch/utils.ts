@@ -4,7 +4,7 @@ import pRetry from "p-retry";
 /**
  * Batch Processing Utilities for Gemini
  *
- * Supported models: gemini-3.0-flash (fast), gemini-2.5-pro (advanced reasoning), gemini-2.5-flash-image (image generation)
+ * Supported models: gemini-2.5-flash (fast), gemini-2.5-pro (advanced reasoning), gemini-2.5-flash-image (image generation)
  *
  * USAGE:
  * ```typescript
@@ -23,7 +23,7 @@ import pRetry from "p-retry";
  *   items,
  *   async (item) => {
  *     const response = await ai.models.generateContent({
- *       model: "gemini-3.0-flash",
+ *       model: "gemini-2.5-flash",
  *       contents: `Process: ${item.name}`,
  *     });
  *     return response.text || "";
