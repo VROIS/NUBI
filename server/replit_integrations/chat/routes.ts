@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { chatStorage } from "./storage";
 
 /*
-Supported models: gemini-2.5-flash (fast), gemini-2.5-pro (advanced reasoning)
+Supported models: gemini-3.0-flash (fast), gemini-2.5-pro (advanced reasoning)
 Usage: Include httpOptions with baseUrl and empty apiVersion when using AI Integrations (required)
 */
 
@@ -91,7 +91,7 @@ export function registerChatRoutes(app: Express): void {
 
       // Stream response from Gemini
       const stream = await ai.models.generateContentStream({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.0-flash",
         contents: chatMessages,
       });
 
