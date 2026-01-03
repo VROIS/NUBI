@@ -10,17 +10,18 @@ import {
   Animated,
   Easing,
   Dimensions,
+  Modal,
+  Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Brand, Colors, Spacing, BorderRadius } from "@/constants/theme";
 import {
   TripFormData,
   Vibe,
-  CompanionType,
-  CurationFocus,
   VIBE_OPTIONS,
   COMPANION_OPTIONS,
   CURATION_FOCUS_OPTIONS,
@@ -28,6 +29,7 @@ import {
 } from "@/types/trip";
 
 type ScreenState = "Input" | "Loading" | "Result";
+type PickerMode = "startDate" | "startTime" | "endDate" | "endTime" | null;
 
 const LOADING_MESSAGES = [
   "실시간 교통 정보 분석 중",
@@ -37,6 +39,31 @@ const LOADING_MESSAGES = [
 ];
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatTime(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function parseDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function parseTime(timeStr: string): Date {
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+}
 
 export default function TripPlannerScreen() {
   const colorScheme = useColorScheme();
@@ -49,6 +76,8 @@ export default function TripPlannerScreen() {
   const [activeDay, setActiveDay] = useState(0);
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
   const spinValue = new Animated.Value(0);
+  const [pickerMode, setPickerMode] = useState<PickerMode>(null);
+  const [tempDate, setTempDate] = useState(new Date());
 
   const [formData, setFormData] = useState<TripFormData>({
     birthDate: "1985-06-15",
@@ -57,9 +86,9 @@ export default function TripPlannerScreen() {
     companionAges: "55, 59",
     curationFocus: "Everyone",
     destination: "파리, 프랑스",
-    startDate: "2024-12-24",
+    startDate: formatDate(new Date()),
     startTime: "09:00",
-    endDate: "2024-12-26",
+    endDate: formatDate(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)),
     endTime: "21:00",
     vibes: ["Culture", "Foodie"],
     travelStyle: "Comfortable",
@@ -92,6 +121,43 @@ export default function TripPlannerScreen() {
     }));
   };
 
+  const openPicker = (mode: PickerMode) => {
+    if (!mode) return;
+    let initialDate = new Date();
+    if (mode === "startDate") initialDate = parseDate(formData.startDate);
+    else if (mode === "endDate") initialDate = parseDate(formData.endDate);
+    else if (mode === "startTime") initialDate = parseTime(formData.startTime);
+    else if (mode === "endTime") initialDate = parseTime(formData.endTime);
+    setTempDate(initialDate);
+    setPickerMode(mode);
+  };
+
+  const handlePickerChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === "android") {
+      setPickerMode(null);
+    }
+    if (selectedDate) {
+      setTempDate(selectedDate);
+      if (Platform.OS === "android") {
+        confirmPicker(selectedDate);
+      }
+    }
+  };
+
+  const confirmPicker = (date?: Date) => {
+    const finalDate = date || tempDate;
+    if (pickerMode === "startDate") {
+      setFormData(prev => ({ ...prev, startDate: formatDate(finalDate) }));
+    } else if (pickerMode === "endDate") {
+      setFormData(prev => ({ ...prev, endDate: formatDate(finalDate) }));
+    } else if (pickerMode === "startTime") {
+      setFormData(prev => ({ ...prev, startTime: formatTime(finalDate) }));
+    } else if (pickerMode === "endTime") {
+      setFormData(prev => ({ ...prev, endTime: formatTime(finalDate) }));
+    }
+    setPickerMode(null);
+  };
+
   const handleGenerate = async () => {
     setScreen("Loading");
     setLoadingStep(0);
@@ -116,7 +182,7 @@ export default function TripPlannerScreen() {
                 id: "1",
                 name: "에펠탑",
                 description: "파리의 상징",
-                startTime: "09:00",
+                startTime: formData.startTime,
                 endTime: "11:00",
                 lat: 48.8584,
                 lng: 2.2945,
@@ -157,7 +223,7 @@ export default function TripPlannerScreen() {
                 name: "루브르 박물관",
                 description: "세계 최대 규모의 박물관",
                 startTime: "10:00",
-                endTime: "14:00",
+                endTime: formData.endTime,
                 lat: 48.8606,
                 lng: 2.3376,
                 vibeScore: 98,
@@ -175,6 +241,50 @@ export default function TripPlannerScreen() {
       });
       setScreen("Result");
     }, 6000);
+  };
+
+  const renderPicker = () => {
+    if (!pickerMode) return null;
+    const isDate = pickerMode === "startDate" || pickerMode === "endDate";
+    const mode = isDate ? "date" : "time";
+    const title = pickerMode === "startDate" ? "시작일" : pickerMode === "endDate" ? "종료일" : pickerMode === "startTime" ? "시작 시간" : "종료 시간";
+
+    if (Platform.OS === "ios") {
+      return (
+        <Modal visible transparent animationType="slide">
+          <View style={styles.pickerModalOverlay}>
+            <View style={[styles.pickerModalContent, { backgroundColor: theme.backgroundRoot }]}>
+              <View style={styles.pickerHeader}>
+                <Pressable onPress={() => setPickerMode(null)}>
+                  <Text style={[styles.pickerCancel, { color: theme.textSecondary }]}>취소</Text>
+                </Pressable>
+                <Text style={[styles.pickerTitle, { color: theme.text }]}>{title}</Text>
+                <Pressable onPress={() => confirmPicker()}>
+                  <Text style={[styles.pickerConfirm, { color: Brand.primary }]}>확인</Text>
+                </Pressable>
+              </View>
+              <DateTimePicker
+                value={tempDate}
+                mode={mode}
+                display="spinner"
+                onChange={handlePickerChange}
+                locale="ko-KR"
+                style={{ height: 200 }}
+              />
+            </View>
+          </View>
+        </Modal>
+      );
+    }
+
+    return (
+      <DateTimePicker
+        value={tempDate}
+        mode={mode}
+        display="default"
+        onChange={handlePickerChange}
+      />
+    );
   };
 
   const renderInput = () => (
@@ -208,26 +318,36 @@ export default function TripPlannerScreen() {
 
       <View style={styles.section}>
         <View style={styles.row}>
-          <View style={[styles.inputBox, styles.flex1, { backgroundColor: theme.backgroundDefault }]}>
+          <Pressable
+            style={[styles.dateBox, styles.flex1, { backgroundColor: theme.backgroundDefault }]}
+            onPress={() => openPicker("startDate")}
+          >
             <Feather name="calendar" size={18} color={Brand.primary} />
-            <TextInput
-              style={[styles.textInput, { color: theme.text }]}
-              value={formData.startDate}
-              onChangeText={text => setFormData(prev => ({ ...prev, startDate: text }))}
-              placeholder="시작일"
-              placeholderTextColor={theme.textTertiary}
-            />
-          </View>
-          <View style={[styles.inputBox, styles.flex1, { backgroundColor: theme.backgroundDefault }]}>
+            <Text style={[styles.dateText, { color: theme.text }]}>{formData.startDate}</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.dateBox, styles.flex1, { backgroundColor: theme.backgroundDefault }]}
+            onPress={() => openPicker("endDate")}
+          >
             <Feather name="calendar" size={18} color={Brand.primary} />
-            <TextInput
-              style={[styles.textInput, { color: theme.text }]}
-              value={formData.endDate}
-              onChangeText={text => setFormData(prev => ({ ...prev, endDate: text }))}
-              placeholder="종료일"
-              placeholderTextColor={theme.textTertiary}
-            />
-          </View>
+            <Text style={[styles.dateText, { color: theme.text }]}>{formData.endDate}</Text>
+          </Pressable>
+        </View>
+        <View style={styles.row}>
+          <Pressable
+            style={[styles.dateBox, styles.flex1, { backgroundColor: theme.backgroundDefault }]}
+            onPress={() => openPicker("startTime")}
+          >
+            <Feather name="clock" size={18} color={Brand.primary} />
+            <Text style={[styles.dateText, { color: theme.text }]}>{formData.startTime}</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.dateBox, styles.flex1, { backgroundColor: theme.backgroundDefault }]}
+            onPress={() => openPicker("endTime")}
+          >
+            <Feather name="clock" size={18} color={Brand.primary} />
+            <Text style={[styles.dateText, { color: theme.text }]}>{formData.endTime}</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -323,6 +443,7 @@ export default function TripPlannerScreen() {
           <Text style={styles.generateText}>일정 생성</Text>
         </LinearGradient>
       </Pressable>
+      {renderPicker()}
     </ScrollView>
   );
 
@@ -454,7 +575,15 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   textInput: { flex: 1, fontSize: 16, fontWeight: "600", padding: 0 },
-  row: { flexDirection: "row", gap: Spacing.sm },
+  dateBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+  },
+  dateText: { fontSize: 15, fontWeight: "600" },
+  row: { flexDirection: "row", gap: Spacing.sm, marginBottom: Spacing.sm },
   flex1: { flex: 1 },
   iconGrid: { flexDirection: "row", gap: Spacing.sm },
   iconButton: {
@@ -479,6 +608,12 @@ const styles = StyleSheet.create({
   generateButton: { borderRadius: BorderRadius.xl, overflow: "hidden", marginTop: Spacing.lg },
   generateGradient: { flexDirection: "row", paddingVertical: Spacing.lg, justifyContent: "center", alignItems: "center", gap: Spacing.sm },
   generateText: { color: "#FFFFFF", fontSize: 18, fontWeight: "800" },
+  pickerModalOverlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.4)" },
+  pickerModalContent: { borderTopLeftRadius: BorderRadius.xl, borderTopRightRadius: BorderRadius.xl, paddingBottom: 40 },
+  pickerHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: Spacing.lg, borderBottomWidth: 1, borderBottomColor: "#E5E7EB" },
+  pickerCancel: { fontSize: 16, fontWeight: "600" },
+  pickerTitle: { fontSize: 16, fontWeight: "700" },
+  pickerConfirm: { fontSize: 16, fontWeight: "700" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
   loadingIconBox: { width: 96, height: 96, borderRadius: 32, justifyContent: "center", alignItems: "center", marginBottom: Spacing.xl },
   spinnerRing: { position: "absolute", width: 96, height: 96, borderRadius: 32, borderWidth: 4, borderTopColor: "transparent" },
