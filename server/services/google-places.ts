@@ -1,7 +1,7 @@
 import { storage } from "../storage";
 import type { InsertPlace, PlaceDataSource } from "@shared/schema";
 
-const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = process.env.Google_maps_api_key || process.env.GOOGLE_MAPS_API_KEY;
 const GOOGLE_PLACES_BASE_URL = "https://places.googleapis.com/v1/places";
 
 interface GooglePlaceResult {

@@ -322,7 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       status: "ok", 
       timestamp: new Date().toISOString(),
       services: {
-        googlePlaces: !!process.env.GOOGLE_MAPS_API_KEY,
+        googlePlaces: !!(process.env.Google_maps_api_key || process.env.GOOGLE_MAPS_API_KEY),
         weather: !!process.env.OPENWEATHER_API_KEY,
         gemini: !!process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
       }
