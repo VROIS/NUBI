@@ -6,7 +6,7 @@ import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useTheme } from "@/hooks/useTheme";
 import { Typography, Spacing, BorderRadius, Brand, Shadows } from "@/constants/theme";
-import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollView";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import ThemedText from "@/components/ThemedText";
 
 export default function PlanModalScreen() {
