@@ -1,10 +1,10 @@
 import React from "react";
+import { Platform, useColorScheme } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MainTabNavigator from "@/navigation/MainTabNavigator";
-import ModalScreen from "@/screens/ModalScreen";
 import PlanModalScreen from "@/screens/PlanModalScreen";
 import DestinationDetailScreen from "@/screens/DestinationDetailScreen";
-import { useScreenOptions } from "@/hooks/useScreenOptions";
+import { Colors } from "@/constants/theme";
 
 export type RootStackParamList = {
   Main: undefined;
@@ -16,22 +16,36 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootStackNavigator() {
-  const screenOptions = useScreenOptions();
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === "dark";
+  const theme = Colors[colorScheme ?? "light"];
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator
+      screenOptions={{
+        headerTitleAlign: "center",
+        headerTransparent: true,
+        headerBlurEffect: isDark ? "dark" : "light",
+        headerTintColor: theme.text,
+        headerStyle: {
+          backgroundColor: Platform.select({
+            ios: undefined,
+            android: theme.backgroundRoot,
+            web: theme.backgroundRoot,
+          }),
+        },
+        gestureEnabled: true,
+        gestureDirection: "horizontal",
+        fullScreenGestureEnabled: Platform.OS === "ios",
+        contentStyle: {
+          backgroundColor: theme.backgroundRoot,
+        },
+      }}
+    >
       <Stack.Screen
         name="Main"
         component={MainTabNavigator}
         options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="Modal"
-        component={ModalScreen}
-        options={{
-          presentation: "modal",
-          headerTitle: "Modal",
-        }}
       />
       <Stack.Screen
         name="PlanModal"

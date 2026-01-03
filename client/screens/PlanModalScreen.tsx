@@ -1,18 +1,18 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Text, Pressable, TextInput } from "react-native";
+import { View, StyleSheet, Text, Pressable, TextInput, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useTheme } from "@/hooks/useTheme";
-import { Typography, Spacing, BorderRadius, Brand, Shadows } from "@/constants/theme";
+import { Typography, Spacing, BorderRadius, Brand, Colors, Shadows } from "@/constants/theme";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import ThemedText from "@/components/ThemedText";
 
 export default function PlanModalScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
-  const { theme } = useTheme();
   const [destination, setDestination] = useState("");
   const [selectedPersona, setSelectedPersona] = useState<"luxury" | "comfort">("comfort");
 

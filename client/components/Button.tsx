@@ -1,5 +1,5 @@
 import React, { ReactNode } from "react";
-import { StyleSheet, Pressable, ViewStyle, StyleProp } from "react-native";
+import { StyleSheet, Pressable, ViewStyle, StyleProp, useColorScheme } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,8 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
-import { useTheme } from "@/hooks/useTheme";
-import { BorderRadius, Spacing } from "@/constants/theme";
+import { BorderRadius, Spacing, Colors } from "@/constants/theme";
 
 interface ButtonProps {
   onPress?: () => void;
@@ -34,7 +33,8 @@ export function Button({
   style,
   disabled = false,
 }: ButtonProps) {
-  const { theme } = useTheme();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({

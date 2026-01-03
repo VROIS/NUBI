@@ -1,20 +1,20 @@
 import React, { useState } from "react";
-import { View, StyleSheet, Text, Pressable, ScrollView } from "react-native";
+import { View, StyleSheet, Text, Pressable, ScrollView, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Brand, Typography, Shadows } from "@/constants/theme";
+import { Spacing, BorderRadius, Brand, Typography, Colors, Shadows } from "@/constants/theme";
 import ThemedText from "@/components/ThemedText";
 
 export default function ProfileScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
-  const { theme } = useTheme();
   const [persona, setPersona] = useState<"luxury" | "comfort">("comfort");
 
   const stats = [

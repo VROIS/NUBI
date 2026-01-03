@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet, Text, ScrollView, Pressable, Dimensions } from "react-native";
+import { View, StyleSheet, Text, ScrollView, Pressable, Dimensions, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
@@ -7,8 +7,7 @@ import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
-import { useTheme } from "@/hooks/useTheme";
-import { Typography, Spacing, BorderRadius, Brand, Shadows, getVibeScoreGradient } from "@/constants/theme";
+import { Typography, Spacing, BorderRadius, Brand, Colors, Shadows, getVibeScoreGradient } from "@/constants/theme";
 import ThemedText from "@/components/ThemedText";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -18,10 +17,12 @@ const HERO_HEIGHT = SCREEN_WIDTH * 9 / 16;
 type RouteParams = RouteProp<RootStackParamList, "DestinationDetail">;
 
 export default function DestinationDetailScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
+  const isDark = colorScheme === "dark";
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const route = useRoute<RouteParams>();
-  const { theme, isDark } = useTheme();
   const { placeId } = route.params;
 
   const { data: place, isLoading } = useQuery({

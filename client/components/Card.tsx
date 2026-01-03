@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, Pressable, ViewStyle } from "react-native";
+import { StyleSheet, Pressable, ViewStyle, useColorScheme } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,8 +8,7 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { ThemedText } from "@/components/ThemedText";
-import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius } from "@/constants/theme";
+import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 
 interface CardProps {
   elevation?: number;
@@ -54,7 +53,8 @@ export function Card({
   onPress,
   style,
 }: CardProps) {
-  const { theme } = useTheme();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
   const scale = useSharedValue(1);
 
   const cardBackgroundColor = getBackgroundColorForElevation(elevation, theme);
@@ -86,7 +86,7 @@ export function Card({
       ]}
     >
       {title ? (
-        <ThemedText type="h4" style={styles.cardTitle}>
+        <ThemedText type="h3" style={styles.cardTitle}>
           {title}
         </ThemedText>
       ) : null}

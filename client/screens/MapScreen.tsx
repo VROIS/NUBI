@@ -1,13 +1,13 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Text, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "@/hooks/useTheme";
-import { Typography, Spacing, Brand } from "@/constants/theme";
+import { Typography, Spacing, Brand, Colors } from "@/constants/theme";
 import { Feather } from "@expo/vector-icons";
 
 export default function MapScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
   const insets = useSafeAreaInsets();
-  const { theme } = useTheme();
 
   return (
     <View style={[styles.container, { backgroundColor: theme.backgroundDefault }]}>

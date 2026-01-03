@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, FlatList, StyleSheet, TextInput, Pressable, Text, Dimensions } from "react-native";
+import { View, FlatList, StyleSheet, TextInput, Pressable, Text, Dimensions, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -10,8 +10,7 @@ import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius, Brand, Typography, Shadows, getVibeScoreGradient } from "@/constants/theme";
+import { Spacing, BorderRadius, Brand, Typography, Colors, getVibeScoreGradient } from "@/constants/theme";
 import ThemedText from "@/components/ThemedText";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
@@ -37,53 +36,21 @@ const SAMPLE_DESTINATIONS = [
   { id: 6, name: "런던", country: "영국", image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad", score: 8.5, tags: ["클래식", "힙한"] },
 ];
 
-interface DestinationCardProps {
-  destination: typeof SAMPLE_DESTINATIONS[0];
-  onPress: () => void;
-}
-
-function DestinationCard({ destination, onPress }: DestinationCardProps) {
-  const { theme } = useTheme();
-  const vibeGradient = getVibeScoreGradient(destination.score);
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.card,
-        pressed && styles.cardPressed,
-      ]}
-    >
-      <Image
-        source={{ uri: destination.image }}
-        style={styles.cardImage}
-        contentFit="cover"
-      />
-      <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.7)"]}
-        style={styles.cardGradient}
-      />
-      
-      <LinearGradient
-        colors={vibeGradient as [string, string]}
-        style={styles.vibeScore}
-      >
-        <Text style={styles.vibeScoreText}>{destination.score.toFixed(1)}</Text>
-      </LinearGradient>
-
-      <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{destination.name}</Text>
-        <Text style={styles.cardSubtitle}>{destination.country}</Text>
-      </View>
-    </Pressable>
-  );
+interface DestinationType {
+  id: number;
+  name: string;
+  country: string;
+  image: string;
+  score: number;
+  tags: string[];
 }
 
 export default function HomeScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
-  const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [selectedVibe, setSelectedVibe] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -103,6 +70,42 @@ export default function HomeScreen() {
     };
     return dest.tags.some(tag => vibeMap[selectedVibe]?.includes(tag));
   });
+
+  const renderDestinationCard = ({ item }: { item: DestinationType }) => {
+    const vibeGradient = getVibeScoreGradient(item.score);
+    
+    return (
+      <Pressable
+        onPress={() => navigation.navigate("DestinationDetail", { placeId: item.id })}
+        style={({ pressed }) => [
+          styles.card,
+          pressed && styles.cardPressed,
+        ]}
+      >
+        <Image
+          source={{ uri: item.image }}
+          style={styles.cardImage}
+          contentFit="cover"
+        />
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.7)"]}
+          style={styles.cardGradient}
+        />
+        
+        <LinearGradient
+          colors={vibeGradient as [string, string]}
+          style={styles.vibeScore}
+        >
+          <Text style={styles.vibeScoreText}>{item.score.toFixed(1)}</Text>
+        </LinearGradient>
+
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>{item.name}</Text>
+          <Text style={styles.cardSubtitle}>{item.country}</Text>
+        </View>
+      </Pressable>
+    );
+  };
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
@@ -169,12 +172,7 @@ export default function HomeScreen() {
       numColumns={2}
       columnWrapperStyle={styles.row}
       keyExtractor={(item) => item.id.toString()}
-      renderItem={({ item }) => (
-        <DestinationCard
-          destination={item}
-          onPress={() => navigation.navigate("DestinationDetail", { placeId: item.id })}
-        />
-      )}
+      renderItem={renderDestinationCard}
     />
   );
 }
@@ -232,7 +230,6 @@ const styles = StyleSheet.create({
     height: CARD_HEIGHT,
     borderRadius: BorderRadius.md,
     overflow: "hidden",
-    ...Shadows.card,
   },
   cardPressed: {
     transform: [{ scale: 0.98 }],

@@ -50,11 +50,21 @@ See `design_guidelines.md` for complete design system including:
 - Vibe score badges (purple 8+, orange 5-7, gray <5)
 
 ## Recent Changes
+- 2026-01-03: Fixed "Invalid hook call" error on web platform
+  - Replaced custom useTheme hook with direct useColorScheme usage across all components
+  - Updated ThemedText, ThemedView, Button, Card, all screen components
+  - Fixed web compatibility issues with React Navigation
 - 2026-01-03: Initial data pipeline and UI implementation
   - Database schema with 15+ tables
   - All core services (Google Places, Weather, Vibe, Taste, Route, Scoring)
   - VibeTrip UI with Discover, Map, Plan, Profile screens
   - App icon generated with purple-pink gradient
+
+## Technical Notes
+- **IMPORTANT**: Do not use custom useTheme hook on web platform - causes "Invalid hook call" error
+- Use `useColorScheme` from 'react-native' directly with `Colors[colorScheme ?? "light"]` pattern
+- Shadow styles deprecated on web - use boxShadow instead
+- props.pointerEvents deprecated - use style.pointerEvents instead
 
 ## User Preferences
 - Korean language interface
