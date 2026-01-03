@@ -30,22 +30,19 @@ export default function HomeScreen() {
         </View>
 
         <Text style={[styles.title, { color: theme.text }]}>VibeTrip</Text>
-        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-          초개인화 고정밀 여행 에이전트
-        </Text>
 
         <Pressable
-          style={styles.startButton}
+          style={styles.loginButton}
           onPress={() => navigation.navigate("TripPlanner")}
         >
           <LinearGradient
             colors={Brand.gradient as [string, string]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.startButtonGradient}
+            style={styles.loginButtonGradient}
           >
-            <Text style={styles.startButtonText}>시작하기</Text>
-            <Feather name="arrow-right" size={20} color="#FFFFFF" />
+            <Feather name="log-in" size={20} color="#FFFFFF" />
+            <Text style={styles.loginButtonText}>로그인</Text>
           </LinearGradient>
         </Pressable>
       </View>
@@ -73,29 +70,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    fontSize: 42,
+    fontSize: 36,
     fontWeight: "900",
-    letterSpacing: -1,
-    marginBottom: Spacing.xs,
-  },
-  subtitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    letterSpacing: -0.5,
     marginBottom: Spacing["3xl"],
   },
-  startButton: {
+  loginButton: {
     borderRadius: BorderRadius.xl,
     overflow: "hidden",
     width: "100%",
   },
-  startButtonGradient: {
+  loginButtonGradient: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     paddingVertical: Spacing.lg,
     gap: Spacing.sm,
   },
-  startButtonText: {
+  loginButtonText: {
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "800",

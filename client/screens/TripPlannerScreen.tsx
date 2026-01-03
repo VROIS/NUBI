@@ -7,27 +7,24 @@ import {
   TextInput,
   ScrollView,
   useColorScheme,
-  ActivityIndicator,
   Animated,
   Easing,
+  Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { Brand, Colors, Spacing, BorderRadius, Typography } from "@/constants/theme";
+import { Brand, Colors, Spacing, BorderRadius } from "@/constants/theme";
 import {
   TripFormData,
   Vibe,
-  TravelStyle,
   CompanionType,
   CurationFocus,
   VIBE_OPTIONS,
-  TRAVEL_STYLE_OPTIONS,
   COMPANION_OPTIONS,
   CURATION_FOCUS_OPTIONS,
   Itinerary,
-  Place,
 } from "@/types/trip";
 
 type ScreenState = "Input" | "Loading" | "Result";
@@ -38,6 +35,8 @@ const LOADING_MESSAGES = [
   "취향 기반 경로 최적화 중",
   "데이터 신뢰도 검증 중",
 ];
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export default function TripPlannerScreen() {
   const colorScheme = useColorScheme();
@@ -111,7 +110,7 @@ export default function TripPlannerScreen() {
         days: [
           {
             day: 1,
-            summary: "도착 후 시내 중심부 탐방. 에펠탑과 개선문을 중심으로 파리의 상징적인 랜드마크를 둘러봅니다.",
+            summary: "도착 후 시내 중심부 탐방. 파리의 상징적인 랜드마크를 둘러봅니다.",
             places: [
               {
                 id: "1",
@@ -124,11 +123,51 @@ export default function TripPlannerScreen() {
                 vibeScore: 95,
                 confidenceScore: 98,
                 sourceType: "Google",
-                personaFitReason: "가족 모두가 즐길 수 있는 대표 관광지입니다.",
+                personaFitReason: "가족 모두가 즐길 수 있는 대표 관광지",
                 tags: ["랜드마크", "포토스팟"],
                 realityCheck: { weather: "Sunny", crowd: "Medium", status: "Open" },
                 image: "",
                 priceEstimate: "약 25유로/인",
+              },
+              {
+                id: "2",
+                name: "개선문",
+                description: "나폴레옹의 승리를 기념",
+                startTime: "12:00",
+                endTime: "13:30",
+                lat: 48.8738,
+                lng: 2.2950,
+                vibeScore: 88,
+                confidenceScore: 95,
+                sourceType: "Google",
+                personaFitReason: "역사와 문화를 체험할 수 있는 명소",
+                tags: ["역사", "건축"],
+                realityCheck: { weather: "Sunny", crowd: "Low", status: "Open" },
+                image: "",
+                priceEstimate: "약 13유로/인",
+              },
+            ],
+          },
+          {
+            day: 2,
+            summary: "예술과 미식의 하루. 루브르 박물관과 현지 맛집 탐방.",
+            places: [
+              {
+                id: "3",
+                name: "루브르 박물관",
+                description: "세계 최대 규모의 박물관",
+                startTime: "10:00",
+                endTime: "14:00",
+                lat: 48.8606,
+                lng: 2.3376,
+                vibeScore: 98,
+                confidenceScore: 99,
+                sourceType: "Google",
+                personaFitReason: "문화/예술 Vibe에 완벽한 선택",
+                tags: ["예술", "박물관"],
+                realityCheck: { weather: "Cloudy", crowd: "High", status: "Open" },
+                image: "",
+                priceEstimate: "약 17유로/인",
               },
             ],
           },
@@ -148,42 +187,44 @@ export default function TripPlannerScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
+        <Pressable onPress={() => navigation.goBack()} style={styles.closeButton}>
+          <Feather name="x" size={24} color={theme.text} />
+        </Pressable>
         <Text style={[styles.title, { color: theme.text }]}>VibeTrip</Text>
-        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-          초개인화 고정밀 여행 에이전트
-        </Text>
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: theme.textTertiary }]}>기본 정보</Text>
         <View style={[styles.inputBox, { backgroundColor: theme.backgroundDefault }]}>
-          <Text style={[styles.inputLabel, { color: theme.textTertiary }]}>목적지</Text>
+          <Feather name="map-pin" size={20} color={Brand.primary} />
           <TextInput
             style={[styles.textInput, { color: theme.text }]}
             value={formData.destination}
             onChangeText={text => setFormData(prev => ({ ...prev, destination: text }))}
-            placeholder="도시, 나라"
+            placeholder="목적지"
             placeholderTextColor={theme.textTertiary}
           />
         </View>
+      </View>
+
+      <View style={styles.section}>
         <View style={styles.row}>
           <View style={[styles.inputBox, styles.flex1, { backgroundColor: theme.backgroundDefault }]}>
-            <Text style={[styles.inputLabel, { color: theme.textTertiary }]}>시작일</Text>
+            <Feather name="calendar" size={18} color={Brand.primary} />
             <TextInput
               style={[styles.textInput, { color: theme.text }]}
               value={formData.startDate}
               onChangeText={text => setFormData(prev => ({ ...prev, startDate: text }))}
-              placeholder="YYYY-MM-DD"
+              placeholder="시작일"
               placeholderTextColor={theme.textTertiary}
             />
           </View>
           <View style={[styles.inputBox, styles.flex1, { backgroundColor: theme.backgroundDefault }]}>
-            <Text style={[styles.inputLabel, { color: theme.textTertiary }]}>종료일</Text>
+            <Feather name="calendar" size={18} color={Brand.primary} />
             <TextInput
               style={[styles.textInput, { color: theme.text }]}
               value={formData.endDate}
               onChangeText={text => setFormData(prev => ({ ...prev, endDate: text }))}
-              placeholder="YYYY-MM-DD"
+              placeholder="종료일"
               placeholderTextColor={theme.textTertiary}
             />
           </View>
@@ -191,76 +232,61 @@ export default function TripPlannerScreen() {
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: theme.textTertiary }]}>동행자 구성</Text>
-        <View style={styles.grid2}>
-          {COMPANION_OPTIONS.map(option => (
-            <Pressable
-              key={option.id}
-              style={[
-                styles.optionButton,
-                { backgroundColor: formData.companionType === option.id ? Brand.primary : theme.backgroundDefault },
-              ]}
-              onPress={() => setFormData(prev => ({ ...prev, companionType: option.id }))}
-            >
-              <Text
+        <View style={styles.iconGrid}>
+          {COMPANION_OPTIONS.map(option => {
+            const isSelected = formData.companionType === option.id;
+            return (
+              <Pressable
+                key={option.id}
                 style={[
-                  styles.optionText,
-                  { color: formData.companionType === option.id ? "#FFFFFF" : theme.textSecondary },
+                  styles.iconButton,
+                  { backgroundColor: isSelected ? Brand.primary : theme.backgroundDefault },
                 ]}
+                onPress={() => setFormData(prev => ({ ...prev, companionType: option.id }))}
               >
-                {option.label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-        <View style={[styles.inputBox, { backgroundColor: theme.backgroundDefault }]}>
-          <Text style={[styles.inputLabel, { color: theme.textTertiary }]}>동행자 연령 (쉼표 구분)</Text>
-          <TextInput
-            style={[styles.textInput, { color: theme.text }]}
-            value={formData.companionAges}
-            onChangeText={text => setFormData(prev => ({ ...prev, companionAges: text }))}
-            placeholder="예: 10, 55, 59"
-            placeholderTextColor={theme.textTertiary}
-          />
+                <Feather
+                  name={option.icon as any}
+                  size={24}
+                  color={isSelected ? "#FFFFFF" : theme.textSecondary}
+                />
+                <Text style={[styles.iconLabel, { color: isSelected ? "#FFFFFF" : theme.textSecondary }]}>
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: theme.textTertiary }]}>이번 여행의 주인공</Text>
-        <View style={styles.focusList}>
-          {CURATION_FOCUS_OPTIONS.map(option => (
-            <Pressable
-              key={option.id}
-              style={[
-                styles.focusButton,
-                { backgroundColor: formData.curationFocus === option.id ? Brand.primary : theme.backgroundDefault },
-              ]}
-              onPress={() => setFormData(prev => ({ ...prev, curationFocus: option.id }))}
-            >
-              <Text
+        <View style={styles.iconGrid}>
+          {CURATION_FOCUS_OPTIONS.map(option => {
+            const isSelected = formData.curationFocus === option.id;
+            return (
+              <Pressable
+                key={option.id}
                 style={[
-                  styles.focusText,
-                  { color: formData.curationFocus === option.id ? "#FFFFFF" : theme.text },
+                  styles.iconButton,
+                  { backgroundColor: isSelected ? Brand.primary : theme.backgroundDefault },
                 ]}
+                onPress={() => setFormData(prev => ({ ...prev, curationFocus: option.id }))}
               >
-                {option.label}
-              </Text>
-              <Text
-                style={[
-                  styles.focusDesc,
-                  { color: formData.curationFocus === option.id ? "rgba(255,255,255,0.8)" : theme.textSecondary },
-                ]}
-              >
-                {option.description}
-              </Text>
-            </Pressable>
-          ))}
+                <Feather
+                  name={option.icon as any}
+                  size={24}
+                  color={isSelected ? "#FFFFFF" : theme.textSecondary}
+                />
+                <Text style={[styles.iconLabel, { color: isSelected ? "#FFFFFF" : theme.textSecondary }]}>
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={[styles.sectionLabel, { color: theme.textTertiary }]}>취향 및 감성</Text>
-        <View style={styles.grid3}>
+        <View style={styles.vibeGrid}>
           {VIBE_OPTIONS.map(vibe => {
             const isSelected = formData.vibes.includes(vibe.id);
             return (
@@ -274,7 +300,7 @@ export default function TripPlannerScreen() {
               >
                 <Feather
                   name={vibe.icon as any}
-                  size={20}
+                  size={22}
                   color={isSelected ? "#FFFFFF" : theme.textSecondary}
                 />
                 <Text style={[styles.vibeText, { color: isSelected ? "#FFFFFF" : theme.textSecondary }]}>
@@ -293,7 +319,8 @@ export default function TripPlannerScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.generateGradient}
         >
-          <Text style={styles.generateText}>일정 생성 시작</Text>
+          <Feather name="navigation" size={20} color="#FFFFFF" />
+          <Text style={styles.generateText}>일정 생성</Text>
         </LinearGradient>
       </Pressable>
     </ScrollView>
@@ -303,11 +330,11 @@ export default function TripPlannerScreen() {
     <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
       <View style={[styles.loadingIconBox, { backgroundColor: `${Brand.primary}15` }]}>
         <Animated.View style={{ transform: [{ rotate: spin }] }}>
-          <View style={styles.spinnerRing} />
+          <View style={[styles.spinnerRing, { borderColor: Brand.primary }]} />
         </Animated.View>
         <Feather name="navigation" size={32} color={Brand.primary} style={styles.loadingIcon} />
       </View>
-      <Text style={[styles.loadingTitle, { color: theme.text }]}>VibeTrip 고정밀 엔진 구동 중</Text>
+      <Text style={[styles.loadingTitle, { color: theme.text }]}>VibeTrip</Text>
       <Text style={[styles.loadingMessage, { color: theme.textSecondary }]}>
         {LOADING_MESSAGES[loadingStep]}
       </Text>
@@ -320,24 +347,25 @@ export default function TripPlannerScreen() {
 
     return (
       <View style={[styles.resultContainer, { backgroundColor: theme.backgroundRoot }]}>
-        <View style={[styles.resultHeader, { paddingTop: insets.top + Spacing.md }]}>
-          <Pressable onPress={() => setScreen("Input")} style={styles.backButton}>
+        <View style={[styles.resultHeader, { paddingTop: insets.top + Spacing.sm }]}>
+          <Pressable onPress={() => setScreen("Input")} style={styles.headerButton}>
             <Feather name="arrow-left" size={24} color={theme.text} />
           </Pressable>
-          <View style={styles.resultHeaderCenter}>
-            <Text style={[styles.resultTitle, { color: theme.text }]}>{itinerary.destination}</Text>
-            <Text style={[styles.resultDates, { color: theme.textSecondary }]}>
-              {itinerary.startDate} - {itinerary.endDate}
-            </Text>
-          </View>
-          <View style={styles.backButton} />
+          <Text style={[styles.resultTitle, { color: theme.text }]}>{itinerary.destination}</Text>
+          <Pressable style={styles.headerButton}>
+            <Feather name="share" size={22} color={theme.text} />
+          </Pressable>
         </View>
 
-        <ScrollView
-          style={styles.resultScrollView}
-          contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.xl }}
-        >
-          <View style={styles.dayTabs}>
+        <View style={[styles.mapPlaceholder, { backgroundColor: theme.backgroundSecondary }]}>
+          <Feather name="map" size={48} color={theme.textTertiary} />
+          <Text style={[styles.mapPlaceholderText, { color: theme.textTertiary }]}>
+            {itinerary.startDate} - {itinerary.endDate}
+          </Text>
+        </View>
+
+        <View style={styles.dayTabsContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayTabs}>
             {itinerary.days.map((day, idx) => (
               <Pressable
                 key={idx}
@@ -347,59 +375,51 @@ export default function TripPlannerScreen() {
                 ]}
                 onPress={() => setActiveDay(idx)}
               >
-                <Text
-                  style={[styles.dayTabText, { color: activeDay === idx ? "#FFFFFF" : theme.textSecondary }]}
-                >
+                <Text style={[styles.dayTabText, { color: activeDay === idx ? "#FFFFFF" : theme.textSecondary }]}>
                   Day {day.day}
                 </Text>
               </Pressable>
             ))}
-          </View>
+          </ScrollView>
+        </View>
 
-          <View style={[styles.summaryBox, { backgroundColor: theme.text }]}>
-            <View style={styles.summaryHeader}>
-              <Feather name="zap" size={14} color={Brand.primary} />
-              <Text style={styles.summaryLabel}>오늘의 스케줄 요약</Text>
-            </View>
+        <ScrollView
+          style={styles.resultScrollView}
+          contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.xl }}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.summaryBox, { backgroundColor: Brand.primary }]}>
+            <Feather name="zap" size={16} color="#FFFFFF" />
             <Text style={styles.summaryText}>{currentDay.summary}</Text>
           </View>
 
           <View style={styles.placesList}>
             {currentDay.places.map((place, index) => (
               <View key={place.id} style={styles.placeItem}>
-                <View style={styles.placeNumber}>
-                  <LinearGradient
-                    colors={Brand.gradient as [string, string]}
-                    style={styles.placeNumberGradient}
-                  >
+                <View style={styles.timelineLeft}>
+                  <View style={[styles.placeNumber, { backgroundColor: Brand.primary }]}>
                     <Text style={styles.placeNumberText}>{index + 1}</Text>
-                  </LinearGradient>
+                  </View>
+                  {index < currentDay.places.length - 1 ? (
+                    <View style={[styles.timelineLine, { backgroundColor: theme.border }]} />
+                  ) : null}
                 </View>
-                <View style={styles.placeContent}>
-                  <View style={styles.placeTimeRow}>
-                    <Text style={[styles.placeTime, { color: theme.text }]}>
-                      {place.startTime} — {place.endTime}
-                    </Text>
-                    <View style={styles.verifiedBadge}>
-                      <Text style={styles.verifiedText}>Verified</Text>
-                    </View>
-                  </View>
-                  <View style={[styles.placeCard, { backgroundColor: theme.backgroundDefault }]}>
+                <View style={[styles.placeCard, { backgroundColor: theme.backgroundDefault }]}>
+                  <View style={styles.placeHeader}>
                     <Text style={[styles.placeName, { color: theme.text }]}>{place.name}</Text>
-                    <Text style={[styles.placeReason, { color: theme.textSecondary }]}>
-                      {place.personaFitReason}
-                    </Text>
-                    <View style={styles.placeScores}>
-                      <View style={styles.scoreItem}>
-                        <Text style={[styles.scoreLabel, { color: theme.textTertiary }]}>Vibe</Text>
-                        <Text style={[styles.scoreValue, { color: Brand.primary }]}>{place.vibeScore}%</Text>
-                      </View>
-                      <View style={styles.scoreItem}>
-                        <Text style={[styles.scoreLabel, { color: theme.textTertiary }]}>신뢰도</Text>
-                        <Text style={[styles.scoreValue, { color: theme.text }]}>{place.confidenceScore}%</Text>
-                      </View>
+                    <View style={[styles.scoreBadge, { backgroundColor: `${Brand.primary}20` }]}>
+                      <Text style={[styles.scoreText, { color: Brand.primary }]}>{place.vibeScore}</Text>
                     </View>
                   </View>
+                  <View style={styles.placeTimeRow}>
+                    <Feather name="clock" size={14} color={theme.textSecondary} />
+                    <Text style={[styles.placeTimeText, { color: theme.textSecondary }]}>
+                      {place.startTime} - {place.endTime}
+                    </Text>
+                  </View>
+                  <Text style={[styles.placeReason, { color: theme.textSecondary }]} numberOfLines={2}>
+                    {place.personaFitReason}
+                  </Text>
                 </View>
               </View>
             ))}
@@ -422,64 +442,74 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollView: { flex: 1 },
   inputContainer: { paddingHorizontal: Spacing.lg },
-  header: { marginBottom: Spacing["2xl"], paddingTop: Spacing.xl },
-  title: { fontSize: 36, fontWeight: "900", letterSpacing: -1 },
-  subtitle: { fontSize: 14, fontWeight: "600", marginTop: Spacing.xs },
-  section: { marginBottom: Spacing.xl },
-  sectionLabel: { fontSize: 10, fontWeight: "800", textTransform: "uppercase", letterSpacing: 2, marginBottom: Spacing.md },
-  inputBox: { padding: Spacing.md, borderRadius: BorderRadius.lg, marginBottom: Spacing.sm },
-  inputLabel: { fontSize: 10, fontWeight: "600", textTransform: "uppercase", marginBottom: 4 },
-  textInput: { fontSize: 16, fontWeight: "700", padding: 0 },
+  header: { flexDirection: "row", alignItems: "center", marginBottom: Spacing.xl, paddingTop: Spacing.sm },
+  closeButton: { width: 44, height: 44, justifyContent: "center", alignItems: "center", marginRight: Spacing.sm },
+  title: { fontSize: 28, fontWeight: "900", letterSpacing: -0.5 },
+  section: { marginBottom: Spacing.lg },
+  inputBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.sm,
+  },
+  textInput: { flex: 1, fontSize: 16, fontWeight: "600", padding: 0 },
   row: { flexDirection: "row", gap: Spacing.sm },
   flex1: { flex: 1 },
-  grid2: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm, marginBottom: Spacing.md },
-  grid3: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
-  optionButton: { width: "48%", paddingVertical: Spacing.md, borderRadius: BorderRadius.md, alignItems: "center" },
-  optionText: { fontSize: 12, fontWeight: "700" },
-  focusList: { gap: Spacing.sm },
-  focusButton: { padding: Spacing.md, borderRadius: BorderRadius.md },
-  focusText: { fontSize: 14, fontWeight: "700", marginBottom: 2 },
-  focusDesc: { fontSize: 12 },
-  vibeButton: { width: "31%", aspectRatio: 1, borderRadius: BorderRadius.md, justifyContent: "center", alignItems: "center", gap: Spacing.xs },
-  vibeText: { fontSize: 11, fontWeight: "600" },
+  iconGrid: { flexDirection: "row", gap: Spacing.sm },
+  iconButton: {
+    flex: 1,
+    aspectRatio: 1,
+    borderRadius: BorderRadius.md,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  iconLabel: { fontSize: 11, fontWeight: "700" },
+  vibeGrid: { flexDirection: "row", flexWrap: "wrap", gap: Spacing.sm },
+  vibeButton: {
+    width: (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.sm * 2) / 3,
+    aspectRatio: 1.2,
+    borderRadius: BorderRadius.md,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: Spacing.xs,
+  },
+  vibeText: { fontSize: 12, fontWeight: "600" },
   generateButton: { borderRadius: BorderRadius.xl, overflow: "hidden", marginTop: Spacing.lg },
-  generateGradient: { paddingVertical: Spacing.lg, alignItems: "center" },
+  generateGradient: { flexDirection: "row", paddingVertical: Spacing.lg, justifyContent: "center", alignItems: "center", gap: Spacing.sm },
   generateText: { color: "#FFFFFF", fontSize: 18, fontWeight: "800" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: Spacing.xl },
   loadingIconBox: { width: 96, height: 96, borderRadius: 32, justifyContent: "center", alignItems: "center", marginBottom: Spacing.xl },
-  spinnerRing: { position: "absolute", width: 96, height: 96, borderRadius: 32, borderWidth: 4, borderColor: Brand.primary, borderTopColor: "transparent" },
+  spinnerRing: { position: "absolute", width: 96, height: 96, borderRadius: 32, borderWidth: 4, borderTopColor: "transparent" },
   loadingIcon: { position: "absolute" },
-  loadingTitle: { fontSize: 22, fontWeight: "900", marginBottom: Spacing.sm, textAlign: "center" },
+  loadingTitle: { fontSize: 24, fontWeight: "900", marginBottom: Spacing.xs },
   loadingMessage: { fontSize: 14, fontWeight: "600" },
   resultContainer: { flex: 1 },
-  resultHeader: { flexDirection: "row", alignItems: "center", paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md },
-  backButton: { width: 44, height: 44, justifyContent: "center", alignItems: "center" },
-  resultHeaderCenter: { flex: 1, alignItems: "center" },
+  resultHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm },
+  headerButton: { width: 44, height: 44, justifyContent: "center", alignItems: "center" },
   resultTitle: { fontSize: 18, fontWeight: "800" },
-  resultDates: { fontSize: 12 },
+  mapPlaceholder: { height: 200, justifyContent: "center", alignItems: "center", marginHorizontal: Spacing.lg, borderRadius: BorderRadius.lg, marginBottom: Spacing.md },
+  mapPlaceholderText: { fontSize: 14, fontWeight: "600", marginTop: Spacing.sm },
+  dayTabsContainer: { paddingVertical: Spacing.sm },
+  dayTabs: { paddingHorizontal: Spacing.lg, gap: Spacing.sm },
+  dayTab: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full },
+  dayTabText: { fontSize: 13, fontWeight: "700" },
   resultScrollView: { flex: 1 },
-  dayTabs: { flexDirection: "row", paddingHorizontal: Spacing.lg, gap: Spacing.sm, marginBottom: Spacing.lg },
-  dayTab: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.md },
-  dayTabText: { fontSize: 12, fontWeight: "700" },
-  summaryBox: { marginHorizontal: Spacing.lg, padding: Spacing.lg, borderRadius: BorderRadius.xl, marginBottom: Spacing.xl },
-  summaryHeader: { flexDirection: "row", alignItems: "center", gap: Spacing.xs, marginBottom: Spacing.sm },
-  summaryLabel: { fontSize: 10, fontWeight: "800", color: Brand.primary, textTransform: "uppercase", letterSpacing: 1 },
-  summaryText: { fontSize: 14, fontWeight: "600", color: "#FFFFFF", lineHeight: 22 },
+  summaryBox: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginHorizontal: Spacing.lg, padding: Spacing.md, borderRadius: BorderRadius.md, marginBottom: Spacing.lg },
+  summaryText: { flex: 1, fontSize: 13, fontWeight: "600", color: "#FFFFFF", lineHeight: 20 },
   placesList: { paddingHorizontal: Spacing.lg },
-  placeItem: { flexDirection: "row", marginBottom: Spacing.xl },
-  placeNumber: { marginRight: Spacing.md },
-  placeNumberGradient: { width: 40, height: 40, borderRadius: 12, justifyContent: "center", alignItems: "center" },
-  placeNumberText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
-  placeContent: { flex: 1 },
-  placeTimeRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginBottom: Spacing.sm },
-  placeTime: { fontSize: 18, fontWeight: "800" },
-  verifiedBadge: { backgroundColor: "#10B98120", paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: 4 },
-  verifiedText: { fontSize: 9, fontWeight: "700", color: "#10B981", textTransform: "uppercase" },
-  placeCard: { padding: Spacing.md, borderRadius: BorderRadius.md },
-  placeName: { fontSize: 18, fontWeight: "800", marginBottom: Spacing.xs },
-  placeReason: { fontSize: 13, lineHeight: 20, marginBottom: Spacing.md },
-  placeScores: { flexDirection: "row", gap: Spacing.xl },
-  scoreItem: {},
-  scoreLabel: { fontSize: 10, fontWeight: "600", textTransform: "uppercase", marginBottom: 2 },
-  scoreValue: { fontSize: 16, fontWeight: "800" },
+  placeItem: { flexDirection: "row", marginBottom: Spacing.lg },
+  timelineLeft: { width: 40, alignItems: "center" },
+  placeNumber: { width: 32, height: 32, borderRadius: 16, justifyContent: "center", alignItems: "center" },
+  placeNumberText: { color: "#FFFFFF", fontSize: 14, fontWeight: "800" },
+  timelineLine: { flex: 1, width: 2, marginVertical: Spacing.xs },
+  placeCard: { flex: 1, padding: Spacing.md, borderRadius: BorderRadius.md, marginLeft: Spacing.sm },
+  placeHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: Spacing.xs },
+  placeName: { fontSize: 16, fontWeight: "800" },
+  scoreBadge: { paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: BorderRadius.xs },
+  scoreText: { fontSize: 12, fontWeight: "800" },
+  placeTimeRow: { flexDirection: "row", alignItems: "center", gap: Spacing.xs, marginBottom: Spacing.xs },
+  placeTimeText: { fontSize: 12, fontWeight: "600" },
+  placeReason: { fontSize: 13, lineHeight: 18 },
 });

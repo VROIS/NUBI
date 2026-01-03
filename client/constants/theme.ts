@@ -1,9 +1,9 @@
 import { Platform } from "react-native";
 
 export const Brand = {
-  primary: "#8B5CF6",
-  secondary: "#EC4899",
-  gradient: ["#8B5CF6", "#EC4899"],
+  primary: "#4285F4",
+  secondary: "#1A73E8",
+  gradient: ["#4285F4", "#1A73E8"],
   luxuryGold: "#F59E0B",
   comfortBlue: "#3B82F6",
 };
@@ -33,8 +33,8 @@ export const Colors = {
     textTertiary: "#9CA3AF",
     buttonText: "#FFFFFF",
     tabIconDefault: "#6B7280",
-    tabIconSelected: "#A78BFA",
-    link: "#A78BFA",
+    tabIconSelected: "#60A5FA",
+    link: "#60A5FA",
     backgroundRoot: "#111827",
     backgroundDefault: "#1F2937",
     backgroundSecondary: "#374151",

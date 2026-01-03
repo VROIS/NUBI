@@ -87,9 +87,9 @@ export const COMPANION_OPTIONS: { id: CompanionType; label: string; icon: string
   { id: 'Group', label: '친구들', icon: 'users' },
 ];
 
-export const CURATION_FOCUS_OPTIONS: { id: CurationFocus; label: string; description: string }[] = [
-  { id: 'Kids', label: '아이 중심', description: '아이가 주인공인 여행' },
-  { id: 'Parents', label: '부모님 중심', description: '부모님을 위한 여행' },
-  { id: 'Everyone', label: '모두 함께', description: '모든 구성원이 즐거운 여행' },
-  { id: 'Self', label: '나 중심', description: '내가 주인공인 여행' },
+export const CURATION_FOCUS_OPTIONS: { id: CurationFocus; label: string; icon: string }[] = [
+  { id: 'Kids', label: '아이', icon: 'smile' },
+  { id: 'Parents', label: '부모님', icon: 'heart' },
+  { id: 'Everyone', label: '모두', icon: 'users' },
+  { id: 'Self', label: '나', icon: 'user' },
 ];
