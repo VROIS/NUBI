@@ -34,6 +34,7 @@ import {
 } from "@/types/trip";
 import { calculateVibeWeights, formatVibeWeightsSummary, getVibeLabel } from "@/utils/vibeCalculator";
 import { apiRequest } from "@/lib/query-client";
+import { InteractiveMap } from "@/components/InteractiveMap";
 
 let DateTimePicker: any = null;
 if (Platform.OS !== "web") {
@@ -642,16 +643,28 @@ export default function TripPlannerScreen() {
           </Pressable>
         </View>
 
-        <View style={[styles.mapPlaceholder, { backgroundColor: theme.backgroundSecondary }]}>
-          <Feather name="map" size={48} color={theme.textTertiary} />
-          <Text style={[styles.mapPlaceholderText, { color: theme.textTertiary }]}>
-            {itinerary.startDate} - {itinerary.endDate}
-          </Text>
-          {currentDay.places.length > 0 ? (
-            <Text style={[styles.mapPlaceholderSubtext, { color: theme.textTertiary }]}>
+        <View style={styles.mapSection}>
+          <View style={[styles.mapDateRow, { backgroundColor: theme.backgroundSecondary }]}>
+            <Feather name="calendar" size={14} color={theme.textSecondary} />
+            <Text style={[styles.mapDateText, { color: theme.textSecondary }]}>
+              {itinerary.startDate} - {itinerary.endDate}
+            </Text>
+            <Text style={[styles.mapPlaceCount, { color: theme.textTertiary }]}>
               {currentDay.places.length}개 장소
             </Text>
-          ) : null}
+          </View>
+          <InteractiveMap
+            places={currentDay.places.map(p => ({
+              id: p.id,
+              name: p.name,
+              lat: p.lat,
+              lng: p.lng,
+              vibeScore: p.vibeScore,
+              startTime: p.startTime,
+              endTime: p.endTime,
+            }))}
+            height={200}
+          />
         </View>
 
         {itinerary.vibeWeights && itinerary.vibeWeights.length > 0 ? (
@@ -833,9 +846,10 @@ const styles = StyleSheet.create({
   resultHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: Spacing.lg, paddingBottom: Spacing.sm },
   headerButton: { width: 44, height: 44, justifyContent: "center", alignItems: "center" },
   resultTitle: { fontSize: 18, fontWeight: "800" },
-  mapPlaceholder: { height: 140, justifyContent: "center", alignItems: "center", marginHorizontal: Spacing.lg, borderRadius: BorderRadius.lg, marginBottom: Spacing.md },
-  mapPlaceholderText: { fontSize: 14, fontWeight: "600", marginTop: Spacing.sm },
-  mapPlaceholderSubtext: { fontSize: 12, fontWeight: "500", marginTop: 2 },
+  mapSection: { marginBottom: Spacing.md },
+  mapDateRow: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginHorizontal: Spacing.lg, padding: Spacing.sm, borderRadius: BorderRadius.md, marginBottom: Spacing.sm },
+  mapDateText: { fontSize: 13, fontWeight: "600" },
+  mapPlaceCount: { fontSize: 12, fontWeight: "500", marginLeft: "auto" },
   vibeWeightsSummary: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginHorizontal: Spacing.lg, padding: Spacing.md, borderRadius: BorderRadius.md, marginBottom: Spacing.md },
   vibeWeightsSummaryText: { fontSize: 13, fontWeight: "700" },
   dayTabsContainer: { paddingVertical: Spacing.sm },
