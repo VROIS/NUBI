@@ -57,8 +57,12 @@ See `design_guidelines.md` for complete design system including:
 - Vibe score badges (purple 8+, orange 5-7, gray <5)
 
 ## Recent Changes
+- 2026-01-05: TASK.md 1.2.1, 1.3.1, 1.4.0 상세 계획 추가
+  - **1.2.1 Vibe Score 표시**: 점수 배지 UI, 상세 뷰, 홈 화면 Vibe 입력 (5시간)
+  - **1.3.1 성능 최적화**: React.memo, FlatList 최적화, expo-image, 페이지네이션 (5시간)
+  - **1.4.0 데이터 연동**: API 키 설정, 캐싱, 폴백 로직, 실제 데이터 전환 (7시간)
 - 2026-01-05: TASK.md 대폭 확장 (문서 작업)
-  - **1.1.1 목적지 입력 시스템**: 경로 빌더 UX (Google Maps 스타일), 인터랙티브 지도 선택, AI 경로 추천
+  - **1.1.1 목적지 입력 시스템**: 경로 빌더 UX (Google Maps 스타일), 인터랙티브 지도 선택, AI 경로 추천 (9시간)
   - **목적지 유형 확장**: 단일 도시, 국가 일주, 다국가 투어, 지역 투어 지원
   - **환율 시스템**: 실시간 환율, KRW 디폴트, 150+ 통화 지원, 일별 예산 환산
   - **1.4.1 경쟁사 Gap 분석**: VibeTrip 3대 차별화 포인트 정의
