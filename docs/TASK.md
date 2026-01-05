@@ -714,6 +714,240 @@ CREATE TABLE data_collection_logs (
 
 ---
 
+### 🏆 경쟁사 Gap 분석 및 차별화
+
+#### 현재 경쟁 서비스 분석
+
+| 서비스 | 장점 | 한계점 |
+|--------|------|--------|
+| **Google Maps** | 방대한 데이터, 정확한 위치 | 감성 분석 없음, 일정 생성 수동 |
+| **TripAdvisor** | 사용자 리뷰 풍부 | 한국어 리뷰 부족, 감성 기반 X |
+| **마이리얼트립** | 한국어, 가이드 연결 | 자유여행 일정 생성 약함 |
+| **네이버 블로그** | 한국어 후기 많음 | 검색 필요, 자동 분석 X |
+| **여행에 미치다** | 유튜브 기반, 한국어 | 텍스트 기반, 앱 없음 |
+
+#### VibeTrip 3대 차별화 포인트
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    🎯 VibeTrip 차별화                        │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1️⃣  다중 소스 데이터 융합                                   │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │  경쟁사: 단일 소스 (Google OR TripAdvisor OR 블로그)      ││
+│  │  VibeTrip: 9개 소스 동시 분석 + AI 통합 점수 (Vibe Score) ││
+│  │  → 유튜버 + 미슐랭 + 블로그 + 리뷰 = 신뢰도 극대화        ││
+│  └─────────────────────────────────────────────────────────┘│
+│                                                             │
+│  2️⃣  데이터 신선도 투명성                                    │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │  경쟁사: 데이터 수집 시점 불명확                          ││
+│  │  VibeTrip: "수집: 2026.01.05 03:00" 명시                 ││
+│  │  → 30일 이상 경과 시 경고, 사용자가 신선도 직접 확인       ││
+│  └─────────────────────────────────────────────────────────┘│
+│                                                             │
+│  3️⃣  신뢰 채널 화이트리스트                                  │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │  경쟁사: 불특정 리뷰 (신뢰도 불확실)                      ││
+│  │  VibeTrip: 검증된 인플루언서만 (성시경, 백종원, 빠니보틀)  ││
+│  │  → 사용자도 신뢰 채널 추가 가능, 개인화된 추천             ││
+│  └─────────────────────────────────────────────────────────┘│
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 차별화 요약 표
+| 기능 | Google | TripAdvisor | 마이리얼트립 | **VibeTrip** |
+|------|--------|-------------|-------------|--------------|
+| 다중 소스 융합 | ❌ | ❌ | ❌ | ✅ 9개 소스 |
+| 감성 기반 추천 | ❌ | ❌ | △ | ✅ Vibe Score |
+| 수집 시점 표시 | ❌ | ❌ | ❌ | ✅ 실시간 |
+| 유튜버 Pick | ❌ | ❌ | ❌ | ✅ 타임스탬프 연동 |
+| 신선도 경고 | ❌ | ❌ | ❌ | ✅ 30일 경과 알림 |
+| 한국어 우선 | ❌ | ❌ | ✅ | ✅ |
+| AI 일정 생성 | △ | ❌ | △ | ✅ |
+
+---
+
+### 📝 블로그/리뷰 소스 관리
+
+#### 추가 DB 스키마 (블로그 소스)
+
+```sql
+-- 블로그/리뷰 소스 화이트리스트 테이블
+CREATE TABLE blog_sources (
+  id SERIAL PRIMARY KEY,
+  source_name VARCHAR(200) NOT NULL,
+  source_type VARCHAR(50) NOT NULL, -- 'michelin', 'tripadvisor', 'blog', 'sns'
+  source_url VARCHAR(500),
+  region_scope VARCHAR(100), -- 'global', 'korea', 'europe', 'asia' 등
+  language VARCHAR(10) DEFAULT 'ko', -- 'ko', 'en', 'ja' 등
+  trust_weight DECIMAL(3,2) DEFAULT 1.0, -- 0.00 ~ 1.00 가중치
+  is_active BOOLEAN DEFAULT TRUE,
+  added_by VARCHAR(50) DEFAULT 'system',
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 기본 블로그 소스 시드 데이터
+INSERT INTO blog_sources (source_name, source_type, source_url, region_scope, language, trust_weight) VALUES
+('Michelin Guide', 'michelin', 'https://guide.michelin.com', 'global', 'en', 1.0),
+('TripAdvisor', 'tripadvisor', 'https://tripadvisor.com', 'global', 'en', 0.9),
+('네이버 블로그', 'blog', 'https://blog.naver.com', 'korea', 'ko', 0.8),
+('티스토리', 'blog', 'https://tistory.com', 'korea', 'ko', 0.7),
+('Instagram', 'sns', 'https://instagram.com', 'global', 'en', 0.6),
+('Yelp', 'review', 'https://yelp.com', 'global', 'en', 0.85),
+('OpenTable', 'booking', 'https://opentable.com', 'global', 'en', 0.9),
+('The Infatuation', 'review', 'https://theinfatuation.com', 'global', 'en', 0.85);
+```
+
+#### 블로그 수집 파이프라인
+
+```
+[블로그 소스 DB]
+    │
+    ├── 미슐랭: guide.michelin.com/ko/restaurants
+    ├── TripAdvisor: tripadvisor.com/Restaurants
+    ├── 네이버: blog.naver.com (검색 API)
+    └── 티스토리: tistory.com (검색)
+    │
+    ▼
+[Gemini Web Search + grounding]
+    │
+    ├── Query: "{장소명} {소스} 리뷰 평가"
+    ├── 언어별 검색 (한국어/영어/현지어)
+    └── 최신순 정렬
+    │
+    ▼
+[데이터 추출 및 정규화]
+    │
+    ├── rating: 평점 추출 (5점 만점 → 10점 변환)
+    ├── review_count: 리뷰 개수
+    ├── sentiment: 긍정/부정/중립 분류
+    ├── summary: 핵심 내용 3줄 요약
+    └── source_url: 원본 링크
+    │
+    ▼
+[DB 저장] → place_external_data
+```
+
+---
+
+### ⚠️ 데이터 신선도 경고 시스템
+
+#### 신선도 레벨 정의
+
+| 경과 일수 | 레벨 | 아이콘 | 표시 |
+|----------|------|--------|------|
+| 0-7일 | 🟢 Fresh | ✅ | "방금 수집" |
+| 8-14일 | 🟡 Recent | 🕐 | "1주 전 수집" |
+| 15-30일 | 🟠 Aging | ⚠️ | "2주 전 수집" |
+| 31일+ | 🔴 Stale | 🚨 | "오래된 데이터" |
+
+#### 신선도 UI 표시
+
+```
+┌────────────────────────────────────────────────────────┐
+│ 🍜 광장시장 육회골목                                     │
+│ ────────────────────────────────────────────────────── │
+│ ⭐ Vibe 8.5  │  📺 유튜버 Pick  │  🌟 빕구르망           │
+│ ────────────────────────────────────────────────────── │
+│ 💰 예상: ₩15,000~25,000                                │
+│ ────────────────────────────────────────────────────── │
+│ ✅ 수집: 2026.01.05 03:15 (오늘)                        │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ 🍕 Pizzeria Da Michele (나폴리)                          │
+│ ────────────────────────────────────────────────────── │
+│ ⭐ Vibe 9.2  │  🌟 미슐랭 1스타                          │
+│ ────────────────────────────────────────────────────── │
+│ 💰 예상: €12~18                                         │
+│ ────────────────────────────────────────────────────── │
+│ ⚠️ 수집: 2025.12.10 03:15 (26일 전)                     │
+│    [🔄 최신 데이터 요청]                                │
+└────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────┐
+│ 🍣 스시 사이토 (도쿄)                                    │
+│ ────────────────────────────────────────────────────── │
+│ ⭐ Vibe 9.8  │  🌟 미슐랭 3스타                          │
+│ ────────────────────────────────────────────────────── │
+│ 💰 예상: ¥30,000~50,000                                 │
+│ ────────────────────────────────────────────────────── │
+│ 🚨 수집: 2025.11.15 03:15 (51일 전) - 오래된 데이터     │
+│    [🔄 최신 데이터 요청]  [ℹ️ 왜 오래됐나요?]            │
+└────────────────────────────────────────────────────────┘
+```
+
+#### 신선도 계산 로직
+
+```typescript
+// server/services/data-freshness.ts
+export function getDataFreshness(collectedAt: Date): {
+  level: 'fresh' | 'recent' | 'aging' | 'stale';
+  daysAgo: number;
+  displayText: string;
+  icon: string;
+  warningLevel: 0 | 1 | 2 | 3;
+} {
+  const now = new Date();
+  const diffMs = now.getTime() - collectedAt.getTime();
+  const daysAgo = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (daysAgo <= 7) {
+    return {
+      level: 'fresh',
+      daysAgo,
+      displayText: daysAgo === 0 ? '오늘 수집' : `${daysAgo}일 전 수집`,
+      icon: '✅',
+      warningLevel: 0
+    };
+  } else if (daysAgo <= 14) {
+    return {
+      level: 'recent',
+      daysAgo,
+      displayText: '1주 전 수집',
+      icon: '🕐',
+      warningLevel: 1
+    };
+  } else if (daysAgo <= 30) {
+    return {
+      level: 'aging',
+      daysAgo,
+      displayText: `${Math.floor(daysAgo / 7)}주 전 수집`,
+      icon: '⚠️',
+      warningLevel: 2
+    };
+  } else {
+    return {
+      level: 'stale',
+      daysAgo,
+      displayText: '오래된 데이터',
+      icon: '🚨',
+      warningLevel: 3
+    };
+  }
+}
+```
+
+#### 사용자 액션
+
+| 상태 | 사용자 옵션 |
+|------|------------|
+| 🟢 Fresh | 없음 (정상) |
+| 🟡 Recent | "최신 데이터 요청" 버튼 (숨김) |
+| 🟠 Aging | "최신 데이터 요청" 버튼 (표시) |
+| 🔴 Stale | "최신 데이터 요청" + 경고 배너 |
+
+**"최신 데이터 요청"** 클릭 시:
+1. 해당 장소만 즉시 재수집 (Gemini Web Search)
+2. 수집 완료 후 UI 자동 업데이트
+3. 수집 로그에 "사용자 요청" 기록
+
+---
+
 ## Phase 2: 핵심 AI 기능
 
 ### 2.1 AI 추천 엔진
