@@ -462,6 +462,183 @@ export async function getVibeRecommendations(
 | useMemo/useCallback | ⬜ | 계산 최적화 |
 | 이미지 최적화 | ⬜ | expo-image 캐싱 활용 |
 
+---
+
+## ⚡ 1.3.1 성능 최적화 상세 계획
+
+### 🎯 목표
+- 앱 로딩 시간 50% 단축
+- 스크롤 60fps 유지
+- 메모리 사용량 최소화
+- 배터리 소모 감소
+
+---
+
+### 📊 현재 성능 이슈 분석
+
+| 이슈 | 원인 | 영향 | 우선순위 |
+|------|------|------|----------|
+| 느린 초기 로딩 | 모든 데이터 한번에 fetch | UX 저하 | 🔴 높음 |
+| 스크롤 버벅임 | 불필요한 리렌더링 | 60fps 미달 | 🔴 높음 |
+| 이미지 지연 | 캐싱 미적용 | 시각적 지연 | 🟡 중간 |
+| 메모리 누수 | 이벤트 리스너 미정리 | 앱 크래시 | 🟡 중간 |
+
+---
+
+### 🔧 최적화 전략
+
+#### 1. React.memo 적용
+```typescript
+// 최적화 전
+export function PlaceCard({ place }: Props) {
+  return <View>...</View>;
+}
+
+// 최적화 후
+export const PlaceCard = React.memo(function PlaceCard({ place }: Props) {
+  return <View>...</View>;
+}, (prevProps, nextProps) => {
+  return prevProps.place.id === nextProps.place.id &&
+         prevProps.place.vibeScore === nextProps.place.vibeScore;
+});
+```
+
+**적용 대상 컴포넌트:**
+- `PlaceCard` - 장소 카드
+- `DayCard` - 일정 카드
+- `VibeBadge` - 점수 배지
+- `MapMarker` - 지도 마커
+- `ItineraryItem` - 일정 항목
+
+#### 2. useMemo/useCallback 최적화
+```typescript
+// 최적화 전
+const sortedPlaces = places.sort((a, b) => b.vibeScore - a.vibeScore);
+
+// 최적화 후
+const sortedPlaces = useMemo(() => 
+  places.sort((a, b) => b.vibeScore - a.vibeScore),
+  [places]
+);
+
+// 콜백 최적화
+const handlePlacePress = useCallback((place: Place) => {
+  navigation.navigate('PlaceDetail', { placeId: place.id });
+}, [navigation]);
+```
+
+**적용 대상:**
+- 장소 정렬/필터링 로직
+- 점수 계산 로직
+- 이벤트 핸들러
+- 스타일 계산
+
+#### 3. 이미지 최적화 (expo-image)
+```typescript
+import { Image } from 'expo-image';
+
+// 최적화된 이미지 컴포넌트
+<Image
+  source={{ uri: place.photoUrl }}
+  style={styles.image}
+  contentFit="cover"
+  placeholder={blurhash}
+  transition={200}
+  cachePolicy="memory-disk"
+/>
+```
+
+**expo-image 장점:**
+- 자동 캐싱 (메모리 + 디스크)
+- 블러해시 플레이스홀더
+- 부드러운 전환 애니메이션
+- WebP/AVIF 자동 최적화
+
+#### 4. FlatList 최적화
+```typescript
+<FlatList
+  data={places}
+  renderItem={renderPlaceCard}
+  keyExtractor={(item) => item.id.toString()}
+  // 성능 최적화 옵션
+  removeClippedSubviews={true}
+  maxToRenderPerBatch={10}
+  windowSize={5}
+  initialNumToRender={10}
+  getItemLayout={(data, index) => ({
+    length: CARD_HEIGHT,
+    offset: CARD_HEIGHT * index,
+    index,
+  })}
+/>
+```
+
+#### 5. 데이터 페이지네이션
+```typescript
+// API 페이지네이션
+GET /api/places?cityId=1&page=1&limit=20
+
+// React Query 무한 스크롤
+const { data, fetchNextPage, hasNextPage } = useInfiniteQuery({
+  queryKey: ['places', cityId],
+  queryFn: ({ pageParam = 1 }) => 
+    fetchPlaces(cityId, pageParam),
+  getNextPageParam: (lastPage) => lastPage.nextPage,
+});
+```
+
+#### 6. 번들 사이즈 최적화
+```javascript
+// 동적 임포트
+const MapView = React.lazy(() => import('./MapView'));
+
+// 조건부 로딩
+{showMap && (
+  <Suspense fallback={<MapSkeleton />}>
+    <MapView />
+  </Suspense>
+)}
+```
+
+---
+
+### 📱 성능 모니터링
+
+#### 개발 중 모니터링
+```typescript
+// React DevTools Profiler 사용
+// 렌더링 시간, 리렌더링 원인 분석
+
+// Flipper 연동 (네이티브 디버깅)
+// 네트워크, 레이아웃, 성능 분석
+```
+
+#### 성능 목표
+| 지표 | 현재 | 목표 |
+|------|------|------|
+| 초기 로딩 | ~3초 | <1.5초 |
+| 스크롤 FPS | 45-50 | 60 |
+| 메모리 사용 | ~200MB | <150MB |
+| 이미지 로딩 | ~500ms | <100ms (캐시) |
+
+---
+
+### ✅ 구현 순서 (1.3 성능 최적화)
+
+| 단계 | 태스크 | 예상 시간 | 의존성 |
+|------|--------|----------|--------|
+| 1 | 주요 컴포넌트 React.memo 적용 | 1시간 | 없음 |
+| 2 | useMemo/useCallback 리팩토링 | 1시간 | 없음 |
+| 3 | expo-image 마이그레이션 | 30분 | 없음 |
+| 4 | FlatList 최적화 옵션 적용 | 30분 | 없음 |
+| 5 | API 페이지네이션 구현 | 1시간 | 백엔드 |
+| 6 | 번들 사이즈 분석 및 최적화 | 30분 | Step 1-5 |
+| 7 | 성능 테스트 및 검증 | 30분 | Step 1-6 |
+
+**총 예상 시간: 약 5시간**
+
+---
+
 ### 1.4 데이터 연동 ⬜ 미완료
 
 | 태스크 | 상태 | 설명 |
@@ -469,6 +646,314 @@ export async function getVibeRecommendations(
 | Google Maps API 키 설정 | ⬜ | 실제 장소 데이터 연동 |
 | OpenWeather API 키 설정 | ⬜ | 날씨 데이터 연동 |
 | 샘플 데이터 → 실제 데이터 | ⬜ | API 연동 완료 후 전환 |
+
+---
+
+## 🔗 1.4.0 데이터 연동 상세 계획
+
+### 🎯 목표
+모든 외부 API를 안전하게 연동하고, 샘플 데이터에서 실제 데이터로 전환.
+API 키 관리, 에러 처리, 폴백 로직을 체계적으로 구현.
+
+---
+
+### 🔑 필요한 API 키 목록
+
+| API | 환경변수 | 용도 | 무료 한도 | 상태 |
+|-----|----------|------|----------|------|
+| **Google Maps** | `GOOGLE_MAPS_API_KEY` | 장소, 사진, 경로 | $200/월 크레딧 | ⬜ 필요 |
+| **OpenWeather** | `OPENWEATHER_API_KEY` | 날씨 현재/예보 | 1,000 콜/일 | ⬜ 필요 |
+| **YouTube Data** | `YOUTUBE_DATA_API_KEY` | 영상, 자막 수집 | 10,000 쿼터/일 | ⬜ 필요 |
+| **Exchange Rate** | `EXCHANGE_RATE_API_KEY` | 실시간 환율 | 1,500 콜/월 | ⬜ 필요 |
+| **Gemini AI** | `AI_INTEGRATIONS_GEMINI_API_KEY` | AI 분석 | 연동됨 | ✅ 완료 |
+
+---
+
+### 🗺️ Google Maps API 연동
+
+#### 필요한 API 서비스
+| 서비스 | 용도 | 예상 호출/일 |
+|--------|------|-------------|
+| Places API (New) | 장소 검색, 상세정보 | ~500 |
+| Places Photos | 장소 사진 | ~1,000 |
+| Geocoding API | 주소 ↔ 좌표 변환 | ~100 |
+| Routes API | 경로 계산, 거리/시간 | ~200 |
+| Maps JavaScript API | 인터랙티브 지도 | 무제한 (클라이언트) |
+
+#### 서버 구현 예시
+```typescript
+// server/services/google-places.ts
+import { Client } from '@googlemaps/google-maps-services-js';
+
+const client = new Client({});
+
+export async function searchPlaces(query: string, location: { lat: number; lng: number }) {
+  try {
+    const response = await client.textSearch({
+      params: {
+        query,
+        location,
+        radius: 5000,
+        key: process.env.GOOGLE_MAPS_API_KEY!,
+      },
+    });
+    return response.data.results;
+  } catch (error) {
+    console.error('Google Places API error:', error);
+    // Gemini 폴백
+    return await searchPlacesWithGemini(query, location);
+  }
+}
+```
+
+#### 보안 설정 (Google Cloud Console)
+1. API 키 제한 (Application restrictions)
+   - HTTP referrers: `*.replit.app`, `localhost:*`
+   - IP addresses: 서버 IP 화이트리스트
+2. API 제한 (API restrictions)
+   - Places API, Geocoding API, Routes API만 허용
+3. 할당량 설정
+   - 일일 한도 설정으로 과금 방지
+
+---
+
+### 🌤️ OpenWeather API 연동
+
+#### 사용할 API 엔드포인트
+| 엔드포인트 | 용도 | 업데이트 주기 |
+|-----------|------|--------------|
+| `/weather` | 현재 날씨 | 실시간 |
+| `/forecast` | 5일 예보 (3시간 단위) | 3시간 |
+| `/onecall` | 7일 예보 + 시간별 | 1시간 |
+
+#### 서버 구현 예시
+```typescript
+// server/services/weather.ts
+export async function getWeather(lat: number, lon: number) {
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+  
+  // 캐시 확인 (1시간)
+  const cached = await getCachedWeather(lat, lon);
+  if (cached && !isExpired(cached, 3600)) {
+    return cached;
+  }
+  
+  try {
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric&lang=kr`
+    );
+    const data = await response.json();
+    
+    // 캐시 저장
+    await cacheWeather(lat, lon, data);
+    
+    return {
+      current: {
+        temp: data.current.temp,
+        feelsLike: data.current.feels_like,
+        description: data.current.weather[0].description,
+        icon: data.current.weather[0].icon,
+      },
+      daily: data.daily.map(d => ({
+        date: new Date(d.dt * 1000),
+        tempMin: d.temp.min,
+        tempMax: d.temp.max,
+        description: d.weather[0].description,
+        icon: d.weather[0].icon,
+        pop: d.pop, // 강수 확률
+      })),
+      alerts: data.alerts || [],
+    };
+  } catch (error) {
+    console.error('OpenWeather API error:', error);
+    return null;
+  }
+}
+```
+
+#### Reality Penalty 계산
+```typescript
+export function calculateWeatherPenalty(weather: Weather): number {
+  let penalty = 0;
+  
+  // 기온 페널티
+  if (weather.temp < 0 || weather.temp > 35) penalty += 1.0;
+  else if (weather.temp < 5 || weather.temp > 30) penalty += 0.5;
+  
+  // 강수 페널티
+  if (weather.pop > 0.7) penalty += 1.0;  // 70% 이상
+  else if (weather.pop > 0.4) penalty += 0.5;
+  
+  // 기상 경보 페널티
+  if (weather.alerts?.length > 0) {
+    const severe = weather.alerts.some(a => 
+      a.event.includes('경보') || a.event.includes('warning')
+    );
+    penalty += severe ? 1.5 : 0.5;
+  }
+  
+  return Math.min(penalty, 3.0); // 최대 3점 감점
+}
+```
+
+---
+
+### 📺 YouTube Data API 연동
+
+#### 쿼터 관리 (10,000/일)
+| 작업 | 쿼터 비용 | 예상 사용 |
+|------|----------|----------|
+| search.list | 100 | ~50회/일 |
+| videos.list | 1 | ~500회/일 |
+| captions.list | 50 | ~100회/일 |
+| captions.download | 200 | ~20회/일 |
+
+#### 채널별 영상 수집
+```typescript
+// server/services/youtube-collector.ts
+export async function collectChannelVideos(channelId: string, maxResults: number = 10) {
+  const apiKey = process.env.YOUTUBE_DATA_API_KEY;
+  
+  // 1. 채널의 최신 영상 검색
+  const searchResponse = await fetch(
+    `https://www.googleapis.com/youtube/v3/search?` +
+    `part=snippet&channelId=${channelId}&order=date&maxResults=${maxResults}&type=video&key=${apiKey}`
+  );
+  const searchData = await searchResponse.json();
+  
+  // 2. 영상 상세 정보 가져오기
+  const videoIds = searchData.items.map(item => item.id.videoId).join(',');
+  const videosResponse = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?` +
+    `part=snippet,contentDetails,statistics&id=${videoIds}&key=${apiKey}`
+  );
+  const videosData = await videosResponse.json();
+  
+  // 3. 자막 추출 (Gemini로 분석)
+  for (const video of videosData.items) {
+    const transcript = await extractTranscript(video.id);
+    const places = await extractPlacesFromTranscript(transcript, video.snippet.title);
+    await saveVideoPlaceMentions(video, places);
+  }
+  
+  return videosData.items;
+}
+```
+
+---
+
+### 💱 Exchange Rate API 연동
+
+#### 무료 API 옵션
+| 서비스 | 무료 한도 | 업데이트 주기 |
+|--------|----------|--------------|
+| exchangerate-api.com | 1,500 콜/월 | 매일 |
+| openexchangerates.org | 1,000 콜/월 | 매일 |
+| fixer.io | 100 콜/월 | 매일 |
+
+#### 서버 구현
+```typescript
+// server/services/exchange-rate.ts
+const CACHE_DURATION = 3600 * 1000; // 1시간
+let rateCache: { rates: Record<string, number>; timestamp: number } | null = null;
+
+export async function getExchangeRates(base: string = 'KRW'): Promise<Record<string, number>> {
+  // 캐시 확인
+  if (rateCache && Date.now() - rateCache.timestamp < CACHE_DURATION) {
+    return rateCache.rates;
+  }
+  
+  try {
+    const response = await fetch(
+      `https://v6.exchangerate-api.com/v6/${process.env.EXCHANGE_RATE_API_KEY}/latest/${base}`
+    );
+    const data = await response.json();
+    
+    rateCache = {
+      rates: data.conversion_rates,
+      timestamp: Date.now(),
+    };
+    
+    // DB에도 저장 (폴백용)
+    await saveRatesToDB(data.conversion_rates);
+    
+    return data.conversion_rates;
+  } catch (error) {
+    console.error('Exchange Rate API error:', error);
+    // DB에서 마지막 환율 가져오기
+    return await getLastRatesFromDB();
+  }
+}
+
+export function convertCurrency(
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+  rates: Record<string, number>
+): number {
+  if (fromCurrency === toCurrency) return amount;
+  
+  // KRW 기준이면 직접 변환
+  if (fromCurrency === 'KRW') {
+    return amount / rates[toCurrency];
+  }
+  if (toCurrency === 'KRW') {
+    return amount * rates[fromCurrency];
+  }
+  
+  // 다른 통화 간 변환 (KRW 경유)
+  const krwAmount = amount * rates[fromCurrency];
+  return krwAmount / rates[toCurrency];
+}
+```
+
+---
+
+### 🔄 샘플 데이터 → 실제 데이터 전환
+
+#### 전환 체크리스트
+| 화면 | 현재 | 전환 후 | 상태 |
+|------|------|---------|------|
+| 홈 (Discover) | 하드코딩 도시 | DB + API | ⬜ |
+| 지도 (Map) | 샘플 마커 | Google Places | ⬜ |
+| 일정 (Plan) | Gemini 생성 | Google + Gemini | ⬜ |
+| 프로필 (Profile) | Mock 데이터 | 로컬 스토리지 | ⬜ |
+
+#### 폴백 전략
+```
+[API 호출]
+    │
+    ├── 성공 → 데이터 반환 + 캐시 저장
+    │
+    └── 실패
+         │
+         ├── 캐시 있음 → 캐시 데이터 반환
+         │
+         └── 캐시 없음
+              │
+              ├── Gemini 폴백 가능 → Gemini로 생성
+              │
+              └── 최종 실패 → 에러 메시지 표시
+```
+
+---
+
+### ✅ 구현 순서 (1.4 데이터 연동)
+
+| 단계 | 태스크 | 예상 시간 | 의존성 |
+|------|--------|----------|--------|
+| 1 | API 키 환경변수 설정 | 30분 | API 키 발급 |
+| 2 | Google Places 서비스 완성 | 1시간 | Step 1 |
+| 3 | OpenWeather 서비스 완성 | 30분 | Step 1 |
+| 4 | Exchange Rate 서비스 구현 | 30분 | Step 1 |
+| 5 | 캐싱 레이어 구현 | 1시간 | Step 2-4 |
+| 6 | 폴백 로직 구현 | 30분 | Step 2-5 |
+| 7 | 홈 화면 실제 데이터 연동 | 1시간 | Step 2 |
+| 8 | 지도 화면 실제 데이터 연동 | 1시간 | Step 2 |
+| 9 | 일정 화면 실제 데이터 연동 | 30분 | Step 2 |
+| 10 | 에러 처리 및 사용자 피드백 | 30분 | Step 7-9 |
+
+**총 예상 시간: 약 7시간**
 
 ---
 
