@@ -629,7 +629,8 @@ export default function TripPlannerScreen() {
 
   const renderResult = () => {
     if (!itinerary) return null;
-    const currentDay = itinerary.days[activeDay];
+    const currentDay = itinerary.days?.[activeDay];
+    const places = currentDay?.places || [];
 
     return (
       <View style={[styles.resultContainer, { backgroundColor: theme.backgroundRoot }]}>
@@ -650,11 +651,11 @@ export default function TripPlannerScreen() {
               {itinerary.startDate} - {itinerary.endDate}
             </Text>
             <Text style={[styles.mapPlaceCount, { color: theme.textTertiary }]}>
-              {currentDay.places.length}개 장소
+              {places.length}개 장소
             </Text>
           </View>
           <InteractiveMap
-            places={currentDay.places.map(p => ({
+            places={places.map(p => ({
               id: p.id,
               name: p.name,
               lat: p.lat,
@@ -678,7 +679,7 @@ export default function TripPlannerScreen() {
 
         <View style={styles.dayTabsContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.dayTabs}>
-            {itinerary.days.map((day, idx) => (
+            {(itinerary.days || []).map((day, idx) => (
               <Pressable
                 key={idx}
                 style={[
@@ -700,19 +701,21 @@ export default function TripPlannerScreen() {
           contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.xl }}
           showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.summaryBox, { backgroundColor: Brand.primary }]}>
-            <Feather name="zap" size={16} color="#FFFFFF" />
-            <Text style={styles.summaryText}>{currentDay.summary}</Text>
-          </View>
+          {currentDay?.summary ? (
+            <View style={[styles.summaryBox, { backgroundColor: Brand.primary }]}>
+              <Feather name="zap" size={16} color="#FFFFFF" />
+              <Text style={styles.summaryText}>{currentDay.summary}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.placesList}>
-            {currentDay.places.map((place, index) => (
+            {places.map((place, index) => (
               <View key={place.id} style={styles.placeItem}>
                 <View style={styles.timelineLeft}>
                   <View style={[styles.placeNumber, { backgroundColor: Brand.primary }]}>
                     <Text style={styles.placeNumberText}>{index + 1}</Text>
                   </View>
-                  {index < currentDay.places.length - 1 ? (
+                  {index < places.length - 1 ? (
                     <View style={[styles.timelineLine, { backgroundColor: theme.border }]} />
                   ) : null}
                 </View>
