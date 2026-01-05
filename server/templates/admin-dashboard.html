@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibeTrip Admin Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 20px 24px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo h1 { font-size: 24px; font-weight: 700; }
+    .logo span { color: #a78bfa; }
+    .status-badge {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .status-ok { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    .status-warn { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 24px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .card h2 {
+      font-size: 16px;
+      color: #a78bfa;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h2::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #a78bfa;
+      border-radius: 50%;
+    }
+    
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 16px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+    }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+    
+    .service-list { display: flex; flex-direction: column; gap: 12px; }
+    .service-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+    }
+    .service-name { font-size: 14px; }
+    .service-status {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .service-status.active { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+    .service-status.inactive { background: #ef4444; }
+    .service-status.pending { background: #f59e0b; }
+    
+    .freshness-bar {
+      display: flex;
+      height: 24px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .freshness-segment { transition: width 0.3s ease; }
+    .freshness-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .channel-list { display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
+    .channel-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+    }
+    .channel-info { display: flex; align-items: center; gap: 10px; }
+    .channel-thumb {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+    }
+    .channel-name { font-size: 14px; }
+    .channel-category {
+      font-size: 11px;
+      color: #9ca3af;
+      background: rgba(255,255,255,0.05);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .trust-weight {
+      font-size: 12px;
+      padding: 4px 10px;
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      border-radius: 12px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      color: #fff;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    
+    .add-form {
+      display: none;
+      padding: 16px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .add-form.active { display: block; }
+    .add-form input, .add-form select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    .add-form input::placeholder { color: #6b7280; }
+    
+    .sync-logs { max-height: 200px; overflow-y: auto; }
+    .log-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 13px;
+    }
+    .log-time { color: #6b7280; }
+    .log-status { padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+    .log-status.success { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    .log-status.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .log-status.pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.05);
+      border: none;
+      border-radius: 8px;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .tab.active {
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      color: #fff;
+    }
+    
+    .loading { text-align: center; padding: 40px; color: #6b7280; }
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #a78bfa;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <h1>Vibe<span>Trip</span></h1>
+        <span style="color: #6b7280; font-size: 14px;">Admin Dashboard</span>
+      </div>
+      <div id="system-status" class="status-badge status-ok">System OK</div>
+    </header>
+    
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="sources">Data Sources</button>
+      <button class="tab" data-tab="api">API Status</button>
+      <button class="tab" data-tab="logs">Sync Logs</button>
+    </div>
+    
+    <div id="tab-overview" class="tab-content">
+      <div class="grid">
+        <div class="card">
+          <h2>Data Overview</h2>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="stat-cities">-</div>
+              <div class="stat-label">Cities</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="stat-places">-</div>
+              <div class="stat-label">Places</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="stat-channels">-</div>
+              <div class="stat-label">YouTube Channels</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="stat-blogs">-</div>
+              <div class="stat-label">Blog Sources</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h2>Data Freshness</h2>
+          <div id="freshness-bar" class="freshness-bar"></div>
+          <div id="freshness-legend" class="freshness-legend"></div>
+        </div>
+      </div>
+      
+      <div class="grid">
+        <div class="card">
+          <h2>API Services</h2>
+          <div id="api-services" class="service-list">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h2>Recent Syncs</h2>
+          <div id="recent-syncs" class="sync-logs">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="tab-sources" class="tab-content" style="display: none;">
+      <div class="grid">
+        <div class="card">
+          <h2>YouTube Channels</h2>
+          <button class="btn btn-primary btn-sm" onclick="toggleForm('yt-form')" style="margin-bottom: 16px;">+ Add Channel</button>
+          <div id="yt-form" class="add-form">
+            <input type="text" id="yt-channel-id" placeholder="Channel ID (e.g., UC...)">
+            <input type="text" id="yt-channel-name" placeholder="Channel Name">
+            <select id="yt-category">
+              <option value="">Select Category</option>
+              <option value="food">Food</option>
+              <option value="travel">Travel</option>
+              <option value="lifestyle">Lifestyle</option>
+            </select>
+            <input type="number" id="yt-trust" placeholder="Trust Weight (0.1 - 2.0)" step="0.1" min="0.1" max="2">
+            <button class="btn btn-primary" onclick="addYoutubeChannel()">Add</button>
+          </div>
+          <div id="youtube-channels" class="channel-list">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <h2>Blog Sources</h2>
+          <button class="btn btn-primary btn-sm" onclick="toggleForm('blog-form')" style="margin-bottom: 16px;">+ Add Source</button>
+          <div id="blog-form" class="add-form">
+            <select id="blog-platform">
+              <option value="">Select Platform</option>
+              <option value="naver">Naver Blog</option>
+              <option value="tistory">Tistory</option>
+              <option value="michelin">Michelin Guide</option>
+              <option value="tripadvisor">TripAdvisor</option>
+            </select>
+            <input type="text" id="blog-name" placeholder="Source Name">
+            <input type="url" id="blog-url" placeholder="Source URL">
+            <input type="number" id="blog-trust" placeholder="Trust Weight (0.1 - 2.0)" step="0.1" min="0.1" max="2">
+            <button class="btn btn-primary" onclick="addBlogSource()">Add</button>
+          </div>
+          <div id="blog-sources" class="channel-list">
+            <div class="loading"><div class="spinner"></div>Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="tab-api" class="tab-content" style="display: none;">
+      <div class="card">
+        <h2>API Configuration Status</h2>
+        <div style="margin-bottom: 20px;">
+          <button class="btn btn-primary" onclick="initApiServices()">Initialize Services</button>
+        </div>
+        <div id="api-detail" class="service-list">
+          <div class="loading"><div class="spinner"></div>Loading...</div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="tab-logs" class="tab-content" style="display: none;">
+      <div class="card">
+        <h2>Sync History</h2>
+        <div id="sync-history" class="sync-logs" style="max-height: 500px;">
+          <div class="loading"><div class="spinner"></div>Loading...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const API_BASE = '/api/admin';
+    
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).style.display = 'block';
+        loadTabData(tab.dataset.tab);
+      });
+    });
+    
+    async function loadTabData(tab) {
+      switch(tab) {
+        case 'overview': loadDashboard(); break;
+        case 'sources': loadSources(); break;
+        case 'api': loadApiDetail(); break;
+        case 'logs': loadLogs(); break;
+      }
+    }
+    
+    async function loadDashboard() {
+      try {
+        const [dashRes, freshnessRes] = await Promise.all([
+          fetch(`${API_BASE}/dashboard`),
+          fetch(`${API_BASE}/data-freshness`)
+        ]);
+        const dash = await dashRes.json();
+        const freshness = await freshnessRes.json();
+        
+        document.getElementById('stat-cities').textContent = dash.overview.cities;
+        document.getElementById('stat-places').textContent = dash.overview.places;
+        document.getElementById('stat-channels').textContent = dash.overview.youtubeChannels;
+        document.getElementById('stat-blogs').textContent = dash.overview.blogSources;
+        
+        const bar = document.getElementById('freshness-bar');
+        const legend = document.getElementById('freshness-legend');
+        const total = freshness.total || 1;
+        const { summary } = freshness;
+        
+        bar.innerHTML = Object.entries(summary).map(([key, val]) => 
+          `<div class="freshness-segment" style="width: ${(val.count/total)*100}%; background: ${val.color}"></div>`
+        ).join('');
+        
+        legend.innerHTML = Object.entries(summary).map(([key, val]) =>
+          `<div class="legend-item"><span class="legend-dot" style="background: ${val.color}"></span>${val.label}: ${val.count}</div>`
+        ).join('');
+        
+        const servicesEl = document.getElementById('api-services');
+        servicesEl.innerHTML = dash.apiServices.length ? dash.apiServices.map(s => `
+          <div class="service-item">
+            <span class="service-name">${s.displayName}</span>
+            <span class="service-status ${s.isConfigured ? 'active' : 'inactive'}"></span>
+          </div>
+        `).join('') : '<div class="empty-state">No services configured. <a href="#" onclick="initApiServices()">Initialize</a></div>';
+        
+        const syncsEl = document.getElementById('recent-syncs');
+        syncsEl.innerHTML = dash.recentSyncs.length ? dash.recentSyncs.map(s => `
+          <div class="log-item">
+            <span>${s.entityType}</span>
+            <span class="log-status ${s.status}">${s.status}</span>
+            <span class="log-time">${new Date(s.startedAt).toLocaleString('ko-KR')}</span>
+          </div>
+        `).join('') : '<div class="empty-state">No recent syncs</div>';
+        
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+      }
+    }
+    
+    async function loadSources() {
+      try {
+        const [ytRes, blogRes] = await Promise.all([
+          fetch(`${API_BASE}/youtube-channels`),
+          fetch(`${API_BASE}/blog-sources`)
+        ]);
+        const channels = await ytRes.json();
+        const blogs = await blogRes.json();
+        
+        const ytEl = document.getElementById('youtube-channels');
+        ytEl.innerHTML = channels.length ? channels.map(c => `
+          <div class="channel-item">
+            <div class="channel-info">
+              <div class="channel-thumb"></div>
+              <div>
+                <div class="channel-name">${c.channelName}</div>
+                <span class="channel-category">${c.category || 'Uncategorized'}</span>
+              </div>
+            </div>
+            <span class="trust-weight">${c.trustWeight.toFixed(1)}</span>
+          </div>
+        `).join('') : '<div class="empty-state">No channels added yet</div>';
+        
+        const blogEl = document.getElementById('blog-sources');
+        blogEl.innerHTML = blogs.length ? blogs.map(b => `
+          <div class="channel-item">
+            <div class="channel-info">
+              <div>
+                <div class="channel-name">${b.sourceName}</div>
+                <span class="channel-category">${b.platform}</span>
+              </div>
+            </div>
+            <span class="trust-weight">${b.trustWeight.toFixed(1)}</span>
+          </div>
+        `).join('') : '<div class="empty-state">No blog sources added yet</div>';
+        
+      } catch (err) {
+        console.error('Sources load error:', err);
+      }
+    }
+    
+    async function loadApiDetail() {
+      try {
+        const res = await fetch(`${API_BASE}/api-services`);
+        const data = await res.json();
+        
+        const el = document.getElementById('api-detail');
+        const envItems = Object.entries(data.envStatus).map(([key, val]) => `
+          <div class="service-item">
+            <span class="service-name">${key.replace(/_/g, ' ')}</span>
+            <span class="service-status ${val ? 'active' : 'inactive'}"></span>
+          </div>
+        `).join('');
+        
+        const serviceItems = data.services.map(s => `
+          <div class="service-item">
+            <span class="service-name">${s.displayName}</span>
+            <div style="display: flex; gap: 12px; align-items: center;">
+              <span style="font-size: 12px; color: #6b7280;">
+                ${s.dailyCallCount || 0}/${s.dailyQuota || '∞'} daily
+              </span>
+              <span class="service-status ${s.isConfigured ? 'active' : 'inactive'}"></span>
+            </div>
+          </div>
+        `).join('');
+        
+        el.innerHTML = `
+          <div style="margin-bottom: 20px;">
+            <h3 style="font-size: 14px; color: #a78bfa; margin-bottom: 12px;">Environment Variables</h3>
+            ${envItems}
+          </div>
+          <div>
+            <h3 style="font-size: 14px; color: #a78bfa; margin-bottom: 12px;">Service Status</h3>
+            ${serviceItems || '<div class="empty-state">No services initialized</div>'}
+          </div>
+        `;
+      } catch (err) {
+        console.error('API detail load error:', err);
+      }
+    }
+    
+    async function loadLogs() {
+      try {
+        const res = await fetch(`${API_BASE}/sync-logs?limit=100`);
+        const logs = await res.json();
+        
+        const el = document.getElementById('sync-history');
+        el.innerHTML = logs.length ? logs.map(l => `
+          <div class="log-item">
+            <span>${l.entityType} ${l.entityId ? `#${l.entityId}` : ''}</span>
+            <span class="log-status ${l.status}">${l.status}</span>
+            <span style="color: #6b7280;">${l.itemsProcessed || 0} items</span>
+            <span class="log-time">${new Date(l.startedAt).toLocaleString('ko-KR')}</span>
+          </div>
+        `).join('') : '<div class="empty-state">No sync logs yet</div>';
+      } catch (err) {
+        console.error('Logs load error:', err);
+      }
+    }
+    
+    async function initApiServices() {
+      try {
+        await fetch(`${API_BASE}/api-services/init`, { method: 'POST' });
+        await fetch(`${API_BASE}/schedules/init`, { method: 'POST' });
+        alert('Services initialized!');
+        loadDashboard();
+        loadApiDetail();
+      } catch (err) {
+        alert('Failed to initialize services');
+      }
+    }
+    
+    function toggleForm(id) {
+      document.getElementById(id).classList.toggle('active');
+    }
+    
+    async function addYoutubeChannel() {
+      const data = {
+        channelId: document.getElementById('yt-channel-id').value,
+        channelName: document.getElementById('yt-channel-name').value,
+        category: document.getElementById('yt-category').value,
+        trustWeight: parseFloat(document.getElementById('yt-trust').value) || 1.0
+      };
+      
+      if (!data.channelId || !data.channelName) {
+        alert('Channel ID and Name are required');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/youtube-channels`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          toggleForm('yt-form');
+          loadSources();
+        } else {
+          const err = await res.json();
+          alert(err.error || 'Failed to add channel');
+        }
+      } catch (err) {
+        alert('Failed to add channel');
+      }
+    }
+    
+    async function addBlogSource() {
+      const data = {
+        platform: document.getElementById('blog-platform').value,
+        sourceName: document.getElementById('blog-name').value,
+        sourceUrl: document.getElementById('blog-url').value,
+        trustWeight: parseFloat(document.getElementById('blog-trust').value) || 1.0
+      };
+      
+      if (!data.platform || !data.sourceName) {
+        alert('Platform and Name are required');
+        return;
+      }
+      
+      try {
+        const res = await fetch(`${API_BASE}/blog-sources`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          toggleForm('blog-form');
+          loadSources();
+        } else {
+          const err = await res.json();
+          alert(err.error || 'Failed to add source');
+        }
+      } catch (err) {
+        alert('Failed to add source');
+      }
+    }
+    
+    loadDashboard();
+  </script>
+</body>
+</html>

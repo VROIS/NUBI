@@ -1,5 +1,7 @@
 import type { Express } from "express";
 import { db } from "./db";
+import path from "path";
+import fs from "fs";
 import { 
   apiServiceStatus, 
   youtubeChannels, 
@@ -16,6 +18,15 @@ import {
 import { eq, desc, sql, count, and, gte } from "drizzle-orm";
 
 export function registerAdminRoutes(app: Express) {
+  
+  app.get("/admin", (req, res) => {
+    const templatePath = path.join(__dirname, "templates", "admin-dashboard.html");
+    if (fs.existsSync(templatePath)) {
+      res.sendFile(templatePath);
+    } else {
+      res.status(404).send("Admin dashboard not found");
+    }
+  });
   
   // ========================================
   // 대시보드 현황 API
