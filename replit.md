@@ -35,9 +35,21 @@ VibeTrip is a hyper-personalized AI travel agent Expo mobile app that transforms
 - `GET /api/cities/:id/recommendations` - AI-powered recommendations
 - `POST /api/sync/city/:id/places` - Sync Google Places data
 - `POST /api/sync/city/:id/scores` - Calculate all scores
-- `POST /api/routes/generate` - **NEW** Generate personalized itinerary from form data
+- `POST /api/routes/generate` - Generate personalized itinerary from form data
 - `POST /api/routes/optimize` - Optimize travel route
 - `GET /api/health` - Health check
+
+### Admin Dashboard Endpoints (NEW)
+- `GET /admin` - Admin Dashboard UI
+- `GET /api/admin/dashboard` - Dashboard overview
+- `GET /api/admin/api-services` - API service status
+- `POST /api/admin/api-services/init` - Initialize API services
+- `GET /api/admin/youtube-channels` - YouTube channel whitelist
+- `POST /api/admin/youtube-channels` - Add YouTube channel
+- `GET /api/admin/blog-sources` - Blog source whitelist
+- `POST /api/admin/blog-sources` - Add blog source
+- `GET /api/admin/data-freshness` - Data freshness report
+- `GET /api/admin/sync-logs` - Sync history
 
 ## Required API Keys (Optional)
 - `GOOGLE_MAPS_API_KEY` - For Google Places and Routes API
@@ -57,6 +69,11 @@ See `design_guidelines.md` for complete design system including:
 - Vibe score badges (purple 8+, orange 5-7, gray <5)
 
 ## Recent Changes
+- 2026-01-05: Admin Dashboard 구현 완료
+  - **DB 스키마 추가**: apiServiceStatus, youtubeChannels, youtubeVideos, blogSources, exchangeRates, dataCollectionSchedule
+  - **관리자 API**: 대시보드 현황, API 서비스 관리, YouTube/블로그 화이트리스트, 데이터 신선도 추적
+  - **관리자 UI**: `/admin` 경로에서 접근 가능한 웹 대시보드 (서버 포트 5000)
+  - **API 서비스 초기화**: Google Places, Maps, OpenWeather, YouTube, Exchange Rate, Gemini 상태 추적
 - 2026-01-05: TASK.md 1.2.1, 1.3.1, 1.4.0 상세 계획 추가
   - **1.2.1 Vibe Score 표시**: 점수 배지 UI, 상세 뷰, 홈 화면 Vibe 입력 (5시간)
   - **1.3.1 성능 최적화**: React.memo, FlatList 최적화, expo-image, 페이지네이션 (5시간)
