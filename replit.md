@@ -39,7 +39,7 @@ VibeTrip is a hyper-personalized AI travel agent Expo mobile app that transforms
 - `POST /api/routes/optimize` - Optimize travel route
 - `GET /api/health` - Health check
 
-### Admin Dashboard Endpoints (NEW)
+### Admin Dashboard Endpoints
 - `GET /admin` - Admin Dashboard UI
 - `GET /api/admin/dashboard` - Dashboard overview
 - `GET /api/admin/api-services` - API service status
@@ -50,6 +50,8 @@ VibeTrip is a hyper-personalized AI travel agent Expo mobile app that transforms
 - `POST /api/admin/blog-sources` - Add blog source
 - `GET /api/admin/data-freshness` - Data freshness report
 - `GET /api/admin/sync-logs` - Sync history
+- `POST /api/admin/seed/defaults` - Seed default YouTube channels and blog sources
+- `POST /api/admin/seed/cities` - Seed default cities (15 popular destinations)
 
 ## Required API Keys (Optional)
 - `GOOGLE_MAPS_API_KEY` - For Google Places and Routes API
@@ -69,6 +71,11 @@ See `design_guidelines.md` for complete design system including:
 - Vibe score badges (purple 8+, orange 5-7, gray <5)
 
 ## Recent Changes
+- 2026-01-06: 기본 데이터 시드 시스템 추가
+  - **시드 API**: `/api/admin/seed/defaults` (유튜브 채널 10개, 블로그 소스 8개), `/api/admin/seed/cities` (도시 15개)
+  - **대시보드 버튼**: API 설정 탭에 "기본 데이터 입력", "기본 도시 입력" 버튼 추가
+  - **기본 채널**: 스트릿푸드파이터(2.0), 빠니보틀(1.9), 여행에미치다(1.8), 먹보형제(1.8) 등
+  - **기본 도시**: 서울, 도쿄, 오사카, 파리, 로마, 방콕, 뉴욕 등 15개 인기 여행지
 - 2026-01-05: Admin Dashboard 구현 완료
   - **DB 스키마 추가**: apiServiceStatus, youtubeChannels, youtubeVideos, blogSources, exchangeRates, dataCollectionSchedule
   - **관리자 API**: 대시보드 현황, API 서비스 관리, YouTube/블로그 화이트리스트, 데이터 신선도 추적
