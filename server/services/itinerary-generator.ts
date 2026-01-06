@@ -329,10 +329,14 @@ ${formData.destination}의 실제 유명한 장소들을 추천해주세요. 정
 }
 
 function calculateDayCount(startDate: string, endDate: string): number {
+  console.log(`[Itinerary] Date inputs: startDate="${startDate}", endDate="${endDate}"`);
   const start = new Date(startDate);
   const end = new Date(endDate);
+  console.log(`[Itinerary] Parsed dates: start=${start.toISOString()}, end=${end.toISOString()}`);
   const diffTime = Math.abs(end.getTime() - start.getTime());
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const dayCount = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  console.log(`[Itinerary] Calculated dayCount: ${dayCount}`);
+  return dayCount;
 }
 
 function groupPlacesByCity(places: PlaceResult[]): Map<string, PlaceResult[]> {
