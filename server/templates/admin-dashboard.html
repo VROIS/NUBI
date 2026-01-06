@@ -476,7 +476,7 @@
           'Gemini AI': apiStatus.gemini?.configured,
           'Google Maps API': apiStatus.googlePlaces?.configured,
           'Google Places API': apiStatus.googlePlaces?.configured,
-          'OpenWeather API': false
+          'OpenWeather API': apiStatus.openWeather?.configured
         };
         
         const servicesEl = document.getElementById('api-services');
@@ -574,7 +574,7 @@
           'Gemini AI': apiStatus.gemini?.configured,
           'Google Maps API': apiStatus.googlePlaces?.configured,
           'Google Places API': apiStatus.googlePlaces?.configured,
-          'OpenWeather API': false
+          'OpenWeather API': apiStatus.openWeather?.configured
         };
         
         const el = document.getElementById('api-detail');
@@ -728,6 +728,7 @@
             <div>YouTube: <span style="color: ${status.youtube.configured ? '#22c55e' : '#f59e0b'}">${status.youtube.message}</span></div>
             <div>Gemini AI: <span style="color: ${status.gemini.configured ? '#22c55e' : '#f59e0b'}">${status.gemini.message}</span></div>
             <div>환율: <span style="color: ${status.exchangeRate.configured ? '#22c55e' : '#f59e0b'}">${status.exchangeRate.message}</span></div>
+            <div>날씨: <span style="color: ${status.openWeather?.configured ? '#22c55e' : '#f59e0b'}">${status.openWeather?.message || '미설정'}</span></div>
           </div>
         `;
       } catch (err) {

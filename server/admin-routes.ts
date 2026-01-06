@@ -604,6 +604,7 @@ export function registerAdminRoutes(app: Express) {
       const googleMapsKey = process.env.Google_maps_api_key || process.env.GOOGLE_MAPS_API_KEY;
       const youtubeKey = process.env.YOUTUBE_API_KEY;
       const geminiKey = process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
+      const openWeatherKey = process.env.OPENWEATHER_API_KEY;
       
       const status = {
         googlePlaces: {
@@ -621,6 +622,10 @@ export function registerAdminRoutes(app: Express) {
         exchangeRate: {
           configured: true,
           message: "무료 API 사용 (API 키 불필요)"
+        },
+        openWeather: {
+          configured: !!openWeatherKey,
+          message: openWeatherKey ? "설정됨" : "OPENWEATHER_API_KEY 환경변수 필요 (openweathermap.org에서 발급)"
         }
       };
       
