@@ -691,6 +691,11 @@ export default function TripPlannerScreen() {
                 <Text style={[styles.dayTabText, { color: activeDay === idx ? "#FFFFFF" : theme.textSecondary }]}>
                   Day {day.day}
                 </Text>
+                {day.city ? (
+                  <Text style={[styles.dayTabCity, { color: activeDay === idx ? "rgba(255,255,255,0.8)" : theme.textTertiary }]}>
+                    {day.city.length > 8 ? day.city.substring(0, 8) + "..." : day.city}
+                  </Text>
+                ) : null}
               </Pressable>
             ))}
           </ScrollView>
@@ -859,6 +864,7 @@ const styles = StyleSheet.create({
   dayTabs: { paddingHorizontal: Spacing.lg, gap: Spacing.sm },
   dayTab: { paddingHorizontal: Spacing.lg, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full },
   dayTabText: { fontSize: 13, fontWeight: "700" },
+  dayTabCity: { fontSize: 10, marginTop: 2 },
   resultScrollView: { flex: 1 },
   summaryBox: { flexDirection: "row", alignItems: "center", gap: Spacing.sm, marginHorizontal: Spacing.lg, padding: Spacing.md, borderRadius: BorderRadius.md, marginBottom: Spacing.lg },
   summaryText: { flex: 1, fontSize: 13, fontWeight: "600", color: "#FFFFFF", lineHeight: 20 },

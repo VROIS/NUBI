@@ -47,6 +47,8 @@ export interface Place {
   personaFitReason: string;
   tags: string[];
   vibeTags?: Vibe[];
+  city?: string;
+  region?: string;
   realityCheck: {
     weather: 'Sunny' | 'Cloudy' | 'Rainy';
     crowd: 'Low' | 'Medium' | 'High';
@@ -60,6 +62,7 @@ export interface Place {
 export interface DayPlan {
   day: number;
   places: Place[];
+  city?: string;
   summary: string;
 }
 
