@@ -47,6 +47,8 @@ interface PlaceResult {
   image: string;
   priceEstimate: string;
   placeTypes: string[];
+  city?: string;
+  region?: string;
 }
 
 interface TimeSlot {
@@ -259,14 +261,21 @@ async function generatePlacesWithGemini(
 - 동행: ${formData.companionType}, ${formData.companionCount}명
 - 큐레이션 포커스: ${formData.curationFocus}
 
+중요한 동선 최적화 규칙:
+1. 같은 도시/지역의 장소들을 연속 일자에 배치할 수 있도록 그룹핑해주세요
+2. 도시 간 이동이 필요한 경우, 인접한 도시끼리 묶어주세요
+3. 각 장소에 반드시 city(도시명)와 region(지역/구역) 정보를 포함해주세요
+
 각 시간대별 장소를 추천해주세요 (아침/점심/오후/저녁).
-실제 존재하는 장소만 추천하고, 각 장소에 대해 다음 정보를 JSON 배열로 제공해주세요:
+실제 존재하는 장소만 추천하고, 각 장소에 대해 다음 정보를 JSON으로 제공해주세요:
 
 {
   "places": [
     {
       "name": "장소명",
       "description": "간단한 설명",
+      "city": "도시명 (예: 파리, 니스, 리옹)",
+      "region": "지역/구역 (예: 마레지구, 몽마르뜨, 샹젤리제)",
       "lat": 위도,
       "lng": 경도,
       "vibeScore": 1-10 점수,
@@ -278,7 +287,8 @@ async function generatePlacesWithGemini(
   ]
 }
 
-${formData.destination}의 실제 유명한 장소들을 추천해주세요. 정확히 ${requiredPlaceCount}개 장소를 추천해주세요. 반드시 ${requiredPlaceCount}개 모두 제공해야 합니다.`;
+${formData.destination}의 실제 유명한 장소들을 추천해주세요. 정확히 ${requiredPlaceCount}개 장소를 추천해주세요. 
+도시별로 균형있게 분배하고, 각 도시 내에서는 지역별로 묶어주세요.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -307,6 +317,8 @@ ${formData.destination}의 실제 유명한 장소들을 추천해주세요. 정
         priceEstimate: place.priceEstimate || "보통",
         placeTypes: [],
         recommendedTime: place.recommendedTime,
+        city: place.city || formData.destination,
+        region: place.region || "",
       }));
     }
   } catch (error) {
@@ -323,6 +335,68 @@ function calculateDayCount(startDate: string, endDate: string): number {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 }
 
+function groupPlacesByCity(places: PlaceResult[]): Map<string, PlaceResult[]> {
+  const cityGroups = new Map<string, PlaceResult[]>();
+  
+  for (const place of places) {
+    const city = place.city || 'Unknown';
+    if (!cityGroups.has(city)) {
+      cityGroups.set(city, []);
+    }
+    cityGroups.get(city)!.push(place);
+  }
+  
+  return cityGroups;
+}
+
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLng/2) * Math.sin(dLng/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+function optimizeCityOrder(cityGroups: Map<string, PlaceResult[]>): string[] {
+  const cities = Array.from(cityGroups.keys());
+  if (cities.length <= 1) return cities;
+  
+  const cityCoords = new Map<string, { lat: number; lng: number }>();
+  for (const [city, places] of cityGroups) {
+    const avgLat = places.reduce((sum, p) => sum + p.lat, 0) / places.length;
+    const avgLng = places.reduce((sum, p) => sum + p.lng, 0) / places.length;
+    cityCoords.set(city, { lat: avgLat, lng: avgLng });
+  }
+  
+  const ordered: string[] = [cities[0]];
+  const remaining = new Set(cities.slice(1));
+  
+  while (remaining.size > 0) {
+    const lastCity = ordered[ordered.length - 1];
+    const lastCoords = cityCoords.get(lastCity)!;
+    
+    let nearestCity = '';
+    let minDistance = Infinity;
+    
+    for (const city of remaining) {
+      const coords = cityCoords.get(city)!;
+      const dist = calculateDistance(lastCoords.lat, lastCoords.lng, coords.lat, coords.lng);
+      if (dist < minDistance) {
+        minDistance = dist;
+        nearestCity = city;
+      }
+    }
+    
+    ordered.push(nearestCity);
+    remaining.delete(nearestCity);
+  }
+  
+  return ordered;
+}
+
 function distributePlacesToSlots(
   places: PlaceResult[],
   vibeWeights: { vibe: Vibe; weight: number; percentage: number }[],
@@ -332,24 +406,37 @@ function distributePlacesToSlots(
   const slotsPerDay = travelPace === 'Packed' ? 4 : 3;
   const schedule: { day: number; slot: string; place: PlaceResult; startTime: string; endTime: string }[] = [];
   
-  const sortedPlaces = [...places].sort((a, b) => b.vibeScore - a.vibeScore);
+  const cityGroups = groupPlacesByCity(places);
+  const orderedCities = optimizeCityOrder(cityGroups);
+  
+  const totalPlaces = places.length;
+  const placesPerDay = Math.ceil(totalPlaces / dayCount);
+  
+  const orderedPlaces: PlaceResult[] = [];
+  for (const city of orderedCities) {
+    const cityPlaces = cityGroups.get(city) || [];
+    cityPlaces.sort((a, b) => b.vibeScore - a.vibeScore);
+    orderedPlaces.push(...cityPlaces);
+  }
   
   let placeIndex = 0;
   
-  for (let day = 1; day <= dayCount && placeIndex < sortedPlaces.length; day++) {
+  for (let day = 1; day <= dayCount; day++) {
     const daySlots = TIME_SLOTS.slice(0, slotsPerDay);
     
     for (const slot of daySlots) {
-      if (placeIndex >= sortedPlaces.length) break;
+      if (placeIndex >= orderedPlaces.length) break;
       
-      const matchingPlace = sortedPlaces.find((p, idx) => {
-        if (idx < placeIndex) return false;
+      const currentCity = orderedPlaces[placeIndex]?.city;
+      
+      const matchingPlace = orderedPlaces.slice(placeIndex).find((p) => {
+        const sameCity = p.city === currentCity;
         const hasRecommendedTime = (p as any).recommendedTime === slot.slot;
         const hasVibeAffinity = p.vibeTags.some(v => slot.vibeAffinity.includes(v));
-        return hasRecommendedTime || hasVibeAffinity;
+        return sameCity && (hasRecommendedTime || hasVibeAffinity);
       });
       
-      const place = matchingPlace || sortedPlaces[placeIndex];
+      const place = matchingPlace || orderedPlaces[placeIndex];
       
       schedule.push({
         day,
@@ -359,9 +446,9 @@ function distributePlacesToSlots(
         endTime: slot.endTime,
       });
       
-      const usedIndex = sortedPlaces.indexOf(place);
+      const usedIndex = orderedPlaces.indexOf(place);
       if (usedIndex > -1) {
-        sortedPlaces.splice(usedIndex, 1);
+        orderedPlaces.splice(usedIndex, 1);
       }
     }
   }
@@ -393,7 +480,7 @@ export async function generateItinerary(formData: TripFormData) {
   places = places.sort((a, b) => b.vibeScore - a.vibeScore).slice(0, requiredPlaceCount + 5);
   const schedule = distributePlacesToSlots(places, vibeWeights, dayCount, formData.travelPace);
   
-  const days: { day: number; places: any[]; summary: string }[] = [];
+  const days: { day: number; places: any[]; city: string; summary: string }[] = [];
   
   for (let d = 1; d <= dayCount; d++) {
     const dayPlaces = schedule
@@ -414,10 +501,17 @@ export async function generateItinerary(formData: TripFormData) {
       .filter((v, i, arr) => arr.indexOf(v) === i)
       .slice(0, 2);
     
+    const dayCities = dayPlaces
+      .map(p => p.city)
+      .filter((c, i, arr) => c && arr.indexOf(c) === i);
+    
+    const cityLabel = dayCities.length > 0 ? dayCities.join(', ') : formData.destination;
+    
     days.push({
       day: d,
       places: dayPlaces,
-      summary: `${topVibes.join(' & ')} 중심의 하루`,
+      city: cityLabel,
+      summary: `${cityLabel} - ${topVibes.join(' & ')} 중심의 하루`,
     });
   }
   
