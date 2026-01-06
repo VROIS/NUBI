@@ -202,6 +202,9 @@ export default function TripPlannerScreen() {
       const response = await apiRequest("POST", "/api/routes/generate", formData);
       const result = await response.json();
       
+      console.log("[TripPlanner] API response days count:", result.days?.length);
+      console.log("[TripPlanner] Days:", result.days?.map((d: any) => ({ day: d.day, city: d.city, placesCount: d.places?.length })));
+      
       clearInterval(interval);
       
       const vibeWeights = calculateVibeWeights(formData.vibes, formData.curationFocus);
