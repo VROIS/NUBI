@@ -443,12 +443,14 @@
     
     async function loadDashboard() {
       try {
-        const [dashRes, freshnessRes] = await Promise.all([
+        const [dashRes, freshnessRes, apiStatusRes] = await Promise.all([
           fetch(`${API_BASE}/dashboard`),
-          fetch(`${API_BASE}/data-freshness`)
+          fetch(`${API_BASE}/data-freshness`),
+          fetch(`${API_BASE}/api-status`)
         ]);
         const dash = await dashRes.json();
         const freshness = await freshnessRes.json();
+        const apiStatus = await apiStatusRes.json();
         
         document.getElementById('stat-cities').textContent = dash.overview.cities;
         document.getElementById('stat-places').textContent = dash.overview.places;
@@ -468,13 +470,25 @@
           `<div class="legend-item"><span class="legend-dot" style="background: ${val.color}"></span>${val.label}: ${val.count}</div>`
         ).join('');
         
+        const realStatusMap = {
+          'Exchange Rate API': apiStatus.exchangeRate?.configured,
+          'YouTube Data API': apiStatus.youtube?.configured,
+          'Gemini AI': apiStatus.gemini?.configured,
+          'Google Maps API': apiStatus.googlePlaces?.configured,
+          'Google Places API': apiStatus.googlePlaces?.configured,
+          'OpenWeather API': false
+        };
+        
         const servicesEl = document.getElementById('api-services');
-        servicesEl.innerHTML = dash.apiServices.length ? dash.apiServices.map(s => `
-          <div class="service-item">
-            <span class="service-name">${s.displayName}</span>
-            <span class="service-status ${s.isConfigured ? 'active' : 'unconfigured'}"></span>
-          </div>
-        `).join('') : '<div class="empty-state">서비스가 설정되지 않았습니다. <a href="#" onclick="initApiServices()">초기화하기</a></div>';
+        servicesEl.innerHTML = dash.apiServices.length ? dash.apiServices.map(s => {
+          const isActive = realStatusMap[s.displayName] ?? s.isConfigured;
+          return `
+            <div class="service-item">
+              <span class="service-name">${s.displayName}</span>
+              <span class="service-status ${isActive ? 'active' : 'unconfigured'}"></span>
+            </div>
+          `;
+        }).join('') : '<div class="empty-state">서비스가 설정되지 않았습니다. <a href="#" onclick="initApiServices()">초기화하기</a></div>';
         
         const syncsEl = document.getElementById('recent-syncs');
         syncsEl.innerHTML = dash.recentSyncs.length ? dash.recentSyncs.map(s => `
