@@ -502,16 +502,25 @@ export function registerAdminRoutes(app: Express) {
   app.post("/api/admin/seed/defaults", async (req, res) => {
     try {
       const defaultYoutubeChannels = [
+        // 맛집 채널 (최고 신뢰도)
+        { channelId: "UC3mY_QDRF9lQvd_wXKfn", channelName: "성시경", category: "food", trustWeight: 2.0 },
+        { channelId: "UC_BAEK_JONGWON", channelName: "백종원", category: "food", trustWeight: 2.0 },
+        { channelId: "UCGrJqBQRypR7BMVp7lwnUUQ", channelName: "스트릿푸드파이터", category: "food", trustWeight: 2.0 },
+        { channelId: "UC_CHOIZA_ROAD", channelName: "최자로드", category: "food", trustWeight: 1.9 },
+        // 미식/와인 채널
+        { channelId: "UC_BIMILIYA", channelName: "비밀이야", category: "food", trustWeight: 1.8 },
+        { channelId: "UC_WINE_ATOM", channelName: "와인 마시는 아톰", category: "food", trustWeight: 1.7 },
+        // 현지 채널
+        { channelId: "UC_PARIS_OINOJA", channelName: "파리외노자", category: "travel", trustWeight: 1.9 },
+        { channelId: "UC_CHUNG_HAEMI", channelName: "CHUNG Haemi", category: "travel", trustWeight: 1.8 },
+        { channelId: "UC_MAKITCHEN", channelName: "마키친", category: "food", trustWeight: 1.8 },
+        // 여행 채널
+        { channelId: "UCsJ6RuBiTVLvNWb56-wr_aQ", channelName: "빠니보틀", category: "travel", trustWeight: 1.9 },
+        { channelId: "UCw_QDRF9lQvd_wXKfnsJIVQ", channelName: "여행에 미치다", category: "travel", trustWeight: 1.8 },
         { channelId: "UCyn-K7rZLXjGl7VXGweIlcA", channelName: "먹보형제", category: "food", trustWeight: 1.8 },
         { channelId: "UCCgR5yXXzF-4T1hTkM_oLFA", channelName: "곱창막창대창", category: "food", trustWeight: 1.7 },
         { channelId: "UCZQ1_FVU_Yt0YBryqN6Mvqg", channelName: "아리랑TV 투어", category: "travel", trustWeight: 1.6 },
-        { channelId: "UCw_QDRF9lQvd_wXKfnsJIVQ", channelName: "여행에 미치다", category: "travel", trustWeight: 1.8 },
-        { channelId: "UCGrJqBQRypR7BMVp7lwnUUQ", channelName: "스트릿푸드파이터", category: "food", trustWeight: 2.0 },
-        { channelId: "UCRlMaLNkpn1gYVgF-4H8jXw", channelName: "테이스티로드", category: "food", trustWeight: 1.5 },
-        { channelId: "UClRNDVO8093rmRTtLe4GEPw", channelName: "랜선 라이프", category: "lifestyle", trustWeight: 1.4 },
-        { channelId: "UCsJ6RuBiTVLvNWb56-wr_aQ", channelName: "빠니보틀", category: "travel", trustWeight: 1.9 },
         { channelId: "UCqy2Dq3xDPVhXKSIw2WaZGQ", channelName: "트래블튜브", category: "travel", trustWeight: 1.6 },
-        { channelId: "UCKOlD8_hKxoKC6hWlPckIlw", channelName: "원지의 하루", category: "lifestyle", trustWeight: 1.5 },
       ];
       
       const defaultBlogSources = [
