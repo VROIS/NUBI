@@ -5,11 +5,9 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import * as WebBrowser from "expo-web-browser";
 
 import { Spacing, BorderRadius, Brand, Typography, Colors, Shadows } from "@/constants/theme";
 import ThemedText from "@/components/ThemedText";
-import { getApiUrl } from "@/lib/query-client";
 
 export default function ProfileScreen() {
   const colorScheme = useColorScheme();
