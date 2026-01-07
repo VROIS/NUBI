@@ -83,13 +83,37 @@ export function registerAdminRoutes(app: Express) {
   
   app.get("/api/admin/api-services", async (req, res) => {
     try {
-      const services = await db.select().from(apiServiceStatus);
+      const dbServices = await db.select().from(apiServiceStatus);
+      
+      const getRealtimeConfigured = (serviceName: string): boolean => {
+        switch (serviceName) {
+          case "google_places":
+          case "google_maps":
+            return !!process.env.GOOGLE_MAPS_API_KEY;
+          case "openweather":
+            return !!process.env.OPENWEATHER_API_KEY;
+          case "youtube_data":
+            return !!process.env.YOUTUBE_API_KEY;
+          case "exchange_rate":
+            return true;
+          case "gemini":
+            return !!process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
+          default:
+            return false;
+        }
+      };
+
+      const services = dbServices.map(service => ({
+        ...service,
+        isConfigured: getRealtimeConfigured(service.serviceName),
+        healthStatus: getServiceHealthStatus(service),
+      }));
       
       const envStatus = {
         GOOGLE_MAPS_API_KEY: !!process.env.GOOGLE_MAPS_API_KEY,
         OPENWEATHER_API_KEY: !!process.env.OPENWEATHER_API_KEY,
-        YOUTUBE_DATA_API_KEY: !!process.env.YOUTUBE_DATA_API_KEY,
-        EXCHANGE_RATE_API_KEY: !!process.env.EXCHANGE_RATE_API_KEY,
+        YOUTUBE_API_KEY: !!process.env.YOUTUBE_API_KEY,
+        EXCHANGE_RATE_API_KEY: true,
         AI_INTEGRATIONS_GEMINI_API_KEY: !!process.env.AI_INTEGRATIONS_GEMINI_API_KEY,
       };
       
@@ -99,6 +123,38 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ error: "Failed to fetch API services" });
     }
   });
+
+  function getServiceHealthStatus(service: typeof apiServiceStatus.$inferSelect): {
+    status: "healthy" | "warning" | "error" | "unknown";
+    message: string;
+  } {
+    if (!service.lastCallAt) {
+      return { status: "unknown", message: "아직 호출되지 않음" };
+    }
+    
+    if (service.lastErrorAt && service.lastSuccessAt) {
+      if (new Date(service.lastErrorAt) > new Date(service.lastSuccessAt)) {
+        return { 
+          status: "error", 
+          message: service.lastErrorMessage || "마지막 호출 실패" 
+        };
+      }
+    } else if (service.lastErrorAt && !service.lastSuccessAt) {
+      return { 
+        status: "error", 
+        message: service.lastErrorMessage || "마지막 호출 실패" 
+      };
+    }
+    
+    const lastCall = new Date(service.lastCallAt);
+    const hoursSinceLastCall = (Date.now() - lastCall.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursSinceLastCall > 24) {
+      return { status: "warning", message: `${Math.floor(hoursSinceLastCall)}시간 전 마지막 호출` };
+    }
+    
+    return { status: "healthy", message: "정상 작동 중" };
+  }
   
   app.post("/api/admin/api-services/init", async (req, res) => {
     try {
@@ -120,9 +176,9 @@ export function registerAdminRoutes(app: Express) {
             case "openweather":
               return !!process.env.OPENWEATHER_API_KEY;
             case "youtube_data":
-              return !!process.env.YOUTUBE_DATA_API_KEY;
+              return !!process.env.YOUTUBE_API_KEY;
             case "exchange_rate":
-              return !!process.env.EXCHANGE_RATE_API_KEY;
+              return true;
             case "gemini":
               return !!process.env.AI_INTEGRATIONS_GEMINI_API_KEY;
             default:
