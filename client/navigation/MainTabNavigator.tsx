@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Pressable, StyleSheet, Platform, useColorScheme } from "react-native";
+import { View, Pressable, StyleSheet, Platform, useColorScheme, Linking } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -12,12 +12,14 @@ import { Brand, Colors, Spacing, BorderRadius } from "@/constants/theme";
 import HomeScreen from "@/screens/HomeScreen";
 import MapScreen from "@/screens/MapScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
+import AdminScreen from "@/screens/AdminScreen";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 export type MainTabParamList = {
   Home: undefined;
   Map: undefined;
   Plan: undefined;
+  Admin: undefined;
   Profile: undefined;
 };
 
@@ -72,6 +74,9 @@ export default function MainTabNavigator() {
         break;
       case "Map":
         iconName = "map";
+        break;
+      case "Admin":
+        iconName = "settings";
         break;
       case "Profile":
         iconName = "user";
@@ -149,6 +154,14 @@ export default function MainTabNavigator() {
             tabPress: (e) => {
               e.preventDefault();
             },
+          }}
+        />
+        <Tab.Screen
+          name="Admin"
+          component={AdminScreen}
+          options={{
+            tabBarLabel: "설정",
+            headerTitle: "관리자",
           }}
         />
         <Tab.Screen
