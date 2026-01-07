@@ -310,7 +310,7 @@ export function registerAdminRoutes(app: Express) {
       if (geminiKey && geminiBaseUrl) {
         await checkWithTimeout("gemini", async () => {
           const response = await fetch(
-            `${geminiBaseUrl}/models/gemini-2.0-flash:generateContent`,
+            `${geminiBaseUrl}/models/gemini-3-flash-preview:generateContent`,
             {
               method: "POST",
               headers: {
