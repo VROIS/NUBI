@@ -71,6 +71,21 @@ See `design_guidelines.md` for complete design system including:
 - Vibe score badges (purple 8+, orange 5-7, gray <5)
 
 ## Recent Changes
+- 2026-01-08: 가격 정보 로우 데이터 수집 시스템 구현
+  - **place_prices 테이블**: 다중 소스 가격 로우 데이터 저장
+    - priceType: entrance_fee, meal_average, activity, transport, ticket
+    - source: google_places, gemini_search, klook, viator, official_website
+    - 통화별 가격 범위 (priceLow, priceHigh, priceAverage)
+  - **가격 수집 서비스**: price-crawler.ts
+    - Google Places price_level 변환 (1-4 → 현지 통화 범위)
+    - Gemini Web Search로 입장료/식사비 실시간 검색
+    - 24시간 캐시 & 신뢰도 점수 (0-1)
+  - **스케줄러 통합**: 3:45 AM KST 자동 수집
+  - **Admin API 추가**:
+    - `GET /api/admin/prices/stats` - 가격 통계
+    - `GET /api/admin/prices/place/:id` - 장소별 가격 정보
+    - `POST /api/admin/prices/sync/city/:id` - 도시별 수집
+    - `POST /api/admin/prices/sync/all` - 전체 수집
 - 2026-01-08: YouTube 크롤러 및 3AM KST 자동 수집 시스템 구현
   - **youtube_place_mentions 테이블**: 영상-장소 매핑 (타임스탬프, 감성분석, 신뢰도)
   - **YouTube 크롤러**: YouTube Data API v3 + Gemini 장소 추출
