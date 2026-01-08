@@ -1786,4 +1786,60 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ error: "Failed to sync all weather" });
     }
   });
+
+  // ========================================
+  // TripAdvisor API (Gemini Search)
+  // ========================================
+
+  app.get("/api/admin/tripadvisor/stats", async (req, res) => {
+    try {
+      const { getTripAdvisorStats } = await import("./services/tripadvisor-crawler");
+      const stats = await getTripAdvisorStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching TripAdvisor stats:", error);
+      res.status(500).json({ error: "Failed to fetch TripAdvisor stats" });
+    }
+  });
+
+  app.get("/api/admin/tripadvisor/place/:placeId", async (req, res) => {
+    try {
+      const placeId = parseInt(req.params.placeId);
+      const { getPlaceTripAdvisorData } = await import("./services/tripadvisor-crawler");
+      const data = await getPlaceTripAdvisorData(placeId);
+      res.json(data || { message: "No TripAdvisor data found" });
+    } catch (error) {
+      console.error("Error fetching place TripAdvisor data:", error);
+      res.status(500).json({ error: "Failed to fetch TripAdvisor data" });
+    }
+  });
+
+  app.post("/api/admin/tripadvisor/sync/city/:cityId", async (req, res) => {
+    try {
+      const cityId = parseInt(req.params.cityId);
+      const { crawlTripAdvisorForCity } = await import("./services/tripadvisor-crawler");
+      const result = await crawlTripAdvisorForCity(cityId);
+      res.json({
+        message: "TripAdvisor 데이터 수집 완료",
+        ...result
+      });
+    } catch (error) {
+      console.error("Error syncing city TripAdvisor:", error);
+      res.status(500).json({ error: "Failed to sync TripAdvisor data" });
+    }
+  });
+
+  app.post("/api/admin/tripadvisor/sync/all", async (req, res) => {
+    try {
+      const { crawlAllTripAdvisor } = await import("./services/tripadvisor-crawler");
+      const result = await crawlAllTripAdvisor();
+      res.json({
+        message: "전체 TripAdvisor 데이터 수집 완료",
+        ...result
+      });
+    } catch (error) {
+      console.error("Error syncing all TripAdvisor:", error);
+      res.status(500).json({ error: "Failed to sync all TripAdvisor data" });
+    }
+  });
 }

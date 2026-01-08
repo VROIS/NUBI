@@ -45,8 +45,9 @@ export class DataScheduler {
     this.scheduleTask("crisis_sync", "0 19 * * *");
     this.scheduleTask("naver_blog_sync", "15 19 * * *");
     this.scheduleTask("weather_sync", "30 19 * * *");
+    this.scheduleTask("tripadvisor_sync", "45 19 * * *");
     this.scheduleTask("exchange_rate_sync", "0 0 * * *");
-    console.log("[Scheduler] Default tasks scheduled (3AM-4:30AM KST)");
+    console.log("[Scheduler] Default tasks scheduled (3AM-5AM KST)");
   }
 
   private scheduleTask(taskName: string, cronExpression: string): void {
@@ -99,6 +100,9 @@ export class DataScheduler {
           break;
         case "weather_sync":
           result = await this.runWeatherSync();
+          break;
+        case "tripadvisor_sync":
+          result = await this.runTripAdvisorSync();
           break;
         case "exchange_rate_sync":
           result = await this.runExchangeRateSync();
@@ -232,6 +236,20 @@ export class DataScheduler {
     }
   }
 
+  private async runTripAdvisorSync(): Promise<{ success: boolean; itemsProcessed: number; errors: string[] }> {
+    try {
+      const { crawlAllTripAdvisor } = await import("./tripadvisor-crawler");
+      const result = await crawlAllTripAdvisor();
+      return {
+        success: result.success,
+        itemsProcessed: result.total,
+        errors: [],
+      };
+    } catch (error: any) {
+      return { success: false, itemsProcessed: 0, errors: [error.message] };
+    }
+  }
+
   async runNow(taskName: string): Promise<{ success: boolean; message: string }> {
     console.log(`[Scheduler] Manual trigger for task: ${taskName}`);
     try {
@@ -258,6 +276,7 @@ export class DataScheduler {
         crisis_sync: "매일 04:00 KST",
         naver_blog_sync: "매일 04:15 KST",
         weather_sync: "매일 04:30 KST",
+        tripadvisor_sync: "매일 04:45 KST",
         exchange_rate_sync: "매일 09:00 KST",
       };
       return {
