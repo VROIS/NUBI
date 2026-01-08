@@ -97,19 +97,6 @@ export default function TripPlannerScreen() {
   const [showWebInput, setShowWebInput] = useState<PickerMode>(null);
   const [pendingGenerate, setPendingGenerate] = useState(false);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (pendingGenerate) {
-        setPendingGenerate(false);
-        isAuthenticated().then(auth => {
-          if (auth) {
-            executeGenerate();
-          }
-        });
-      }
-    }, [pendingGenerate])
-  );
-
   const [formData, setFormData] = useState<TripFormData>({
     birthDate: "1985-06-15",
     companionType: "Family",
@@ -267,6 +254,19 @@ export default function TripPlannerScreen() {
       navigation.navigate("Onboarding");
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      if (pendingGenerate) {
+        setPendingGenerate(false);
+        isAuthenticated().then(auth => {
+          if (auth) {
+            executeGenerate();
+          }
+        });
+      }
+    }, [pendingGenerate])
+  );
 
   const generateDateOptions = () => {
     const options: string[] = [];
