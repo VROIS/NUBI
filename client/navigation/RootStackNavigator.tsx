@@ -4,10 +4,12 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MainTabNavigator from "@/navigation/MainTabNavigator";
 import TripPlannerScreen from "@/screens/TripPlannerScreen";
 import DestinationDetailScreen from "@/screens/DestinationDetailScreen";
+import OnboardingScreen from "@/screens/OnboardingScreen";
 import { Colors } from "@/constants/theme";
 
 export type RootStackParamList = {
   Main: undefined;
+  Onboarding: undefined;
   TripPlanner: undefined;
   DestinationDetail: { placeId: number };
 };
@@ -45,6 +47,14 @@ export default function RootStackNavigator() {
         name="Main"
         component={MainTabNavigator}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Onboarding"
+        component={OnboardingScreen}
+        options={{
+          headerShown: false,
+          presentation: "card",
+        }}
       />
       <Stack.Screen
         name="TripPlanner"

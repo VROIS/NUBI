@@ -133,7 +133,7 @@ export default function MainTabNavigator() {
           component={HomeScreen}
           options={{
             tabBarLabel: "탐색",
-            headerTitle: "VibeTrip",
+            headerShown: false,
           }}
         />
         <Tab.Screen
