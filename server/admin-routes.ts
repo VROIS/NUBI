@@ -1842,4 +1842,105 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ error: "Failed to sync all TripAdvisor data" });
     }
   });
+
+  // ========================================
+  // 프랑스 교통 비용 API (가이드 검증 데이터)
+  // ========================================
+
+  app.get("/api/admin/transport/france/all", async (req, res) => {
+    try {
+      const { getTransportPrices } = await import("./services/france-transport-service");
+      const data = getTransportPrices();
+      res.json(data);
+    } catch (error) {
+      console.error("Error fetching transport prices:", error);
+      res.status(500).json({ error: "Failed to fetch transport prices" });
+    }
+  });
+
+  app.get("/api/admin/transport/france/version", async (req, res) => {
+    try {
+      const { getDataVersion } = await import("./services/france-transport-service");
+      res.json(getDataVersion());
+    } catch (error) {
+      console.error("Error fetching data version:", error);
+      res.status(500).json({ error: "Failed to fetch data version" });
+    }
+  });
+
+  app.get("/api/admin/transport/france/airport", async (req, res) => {
+    try {
+      const { getAirportTransferPrices } = await import("./services/france-transport-service");
+      res.json(getAirportTransferPrices());
+    } catch (error) {
+      console.error("Error fetching airport prices:", error);
+      res.status(500).json({ error: "Failed to fetch airport prices" });
+    }
+  });
+
+  app.get("/api/admin/transport/france/charter", async (req, res) => {
+    try {
+      const { getVehicleCharterPrices } = await import("./services/france-transport-service");
+      res.json(getVehicleCharterPrices());
+    } catch (error) {
+      console.error("Error fetching charter prices:", error);
+      res.status(500).json({ error: "Failed to fetch charter prices" });
+    }
+  });
+
+  app.get("/api/admin/transport/france/bus", async (req, res) => {
+    try {
+      const { getBusCharterPrices } = await import("./services/france-transport-service");
+      res.json(getBusCharterPrices());
+    } catch (error) {
+      console.error("Error fetching bus prices:", error);
+      res.status(500).json({ error: "Failed to fetch bus prices" });
+    }
+  });
+
+  app.get("/api/admin/transport/france/comparison", async (req, res) => {
+    try {
+      const { getRideshareComparison } = await import("./services/france-transport-service");
+      res.json(getRideshareComparison());
+    } catch (error) {
+      console.error("Error fetching rideshare comparison:", error);
+      res.status(500).json({ error: "Failed to fetch rideshare comparison" });
+    }
+  });
+
+  app.get("/api/admin/transport/france/price/:priceId", async (req, res) => {
+    try {
+      const { getPriceById } = await import("./services/france-transport-service");
+      const price = getPriceById(req.params.priceId);
+      if (!price) {
+        return res.status(404).json({ error: "Price not found" });
+      }
+      res.json(price);
+    } catch (error) {
+      console.error("Error fetching price:", error);
+      res.status(500).json({ error: "Failed to fetch price" });
+    }
+  });
+
+  app.post("/api/admin/transport/france/calculate", async (req, res) => {
+    try {
+      const { calculateTransportCost } = await import("./services/france-transport-service");
+      const result = calculateTransportCost(req.body);
+      res.json(result);
+    } catch (error) {
+      console.error("Error calculating transport cost:", error);
+      res.status(500).json({ error: "Failed to calculate transport cost" });
+    }
+  });
+
+  app.post("/api/admin/transport/france/suggest", async (req, res) => {
+    try {
+      const { getItineraryTransportSuggestion } = await import("./services/france-transport-service");
+      const result = getItineraryTransportSuggestion(req.body);
+      res.json(result);
+    } catch (error) {
+      console.error("Error getting transport suggestion:", error);
+      res.status(500).json({ error: "Failed to get transport suggestion" });
+    }
+  });
 }
