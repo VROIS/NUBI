@@ -19,7 +19,7 @@ The core recommendation engine relies on a proprietary scoring system: `Final Sc
 
 The application also features a persona system (e.g., Luxury, Comfort) to tailor recommendations further, with corresponding UI accents.
 
-UI/UX design adheres to a specific system including a purple-pink gradient, iOS 26 liquid glass effects, a 4-tab bottom navigation with a Floating Action Button (FAB), and color-coded Vibe score badges.
+UI/UX design adheres to a specific system including Gemini Blue (#4285F4) primary color, iOS 26 liquid glass effects with transparent glass-style tab bar, and a 4-tab bottom navigation. The app uses a "Value First" approach where TripPlannerScreen is the first screen - users can input trip preferences without login, authentication only required when clicking "일정 생성" button.
 
 The backend provides a comprehensive set of API endpoints for managing cities, places, recommendations, itinerary generation, and optimization. An Admin Dashboard is available for managing API services, data sources (YouTube, blogs), data freshness, sync logs, and seeding default data.
 
