@@ -56,11 +56,10 @@ async function searchNaverBlog(query: string): Promise<NaverBlogSearchResult[]> 
 
 async function searchBlogWithGemini(query: string): Promise<NaverBlogSearchResult[]> {
   try {
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+    const { ai } = await import("../replit_integrations/image/client");
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash-preview",
+      model: "gemini-2.5-flash",
       contents: `Search for Korean travel blog posts about: ${query}
 
 Find recent blog posts from Korean travelers. Return JSON array:
@@ -97,11 +96,10 @@ async function extractPlacesFromBlog(
   cityName: string
 ): Promise<{ places: ExtractedPlace[]; sentimentScore: number }> {
   try {
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+    const { ai } = await import("../replit_integrations/image/client");
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash-preview",
+      model: "gemini-2.5-flash",
       contents: `Analyze this Korean travel blog post about ${cityName}:
 
 Title: ${title}

@@ -154,11 +154,10 @@ async function fetchWeatherWithGemini(
   lon: number
 ): Promise<{ success: boolean; forecastDays: number; currentCondition?: string }> {
   try {
-    const { GoogleGenAI } = await import("@google/genai");
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+    const { ai } = await import("../replit_integrations/image/client");
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.0-flash-preview",
+      model: "gemini-2.5-flash",
       contents: `What is the current weather and 5-day forecast for ${cityName}?
 
 Return JSON:

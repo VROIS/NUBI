@@ -71,6 +71,13 @@ See `design_guidelines.md` for complete design system including:
 - Vibe score badges (purple 8+, orange 5-7, gray <5)
 
 ## Recent Changes
+- 2026-01-08: Gemini AI 통합 수정 완료
+  - **중요 수정**: Replit AI Integrations 호환 클라이언트 설정
+    - `httpOptions.apiVersion: ""` 필수 설정 적용
+    - 모든 크롤러가 `server/replit_integrations/image/client.ts`의 `ai` 객체 사용
+  - **가격 크롤러 작동 확인**: 경복궁 3,000원, N서울타워 14,110-24,986원 등 실제 가격 수집
+  - **날씨 크롤러 작동 확인**: 6일 예보 + Reality Penalty 계산 완료
+  - **지원 모델**: gemini-2.5-flash, gemini-2.5-pro, gemini-2.5-flash-image
 - 2026-01-08: 네이버 블로그 및 날씨 크롤러 구현
   - **네이버 블로그 크롤러**: Naver Search API + Gemini 폴백
     - naver_blog_posts 테이블: 도시/장소별 블로그 분석
