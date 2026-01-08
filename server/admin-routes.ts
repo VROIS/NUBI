@@ -1287,4 +1287,72 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ error: "Failed to seed hashtags" });
     }
   });
+
+  // ========================================
+  // Instagram 자동 수집 API
+  // ========================================
+
+  app.post("/api/admin/instagram/collect/place/:id", async (req, res) => {
+    try {
+      const placeId = parseInt(req.params.id);
+      const { instagramAutoCollector } = await import("./services/instagram-auto-collector");
+      
+      const result = await instagramAutoCollector.collectForPlace(placeId);
+      
+      res.json({
+        message: `Instagram 데이터 수집 완료`,
+        ...result,
+      });
+    } catch (error) {
+      console.error("Error collecting Instagram for place:", error);
+      res.status(500).json({ error: "Failed to collect Instagram data" });
+    }
+  });
+
+  app.post("/api/admin/instagram/collect/city/:id", async (req, res) => {
+    try {
+      const cityId = parseInt(req.params.id);
+      const { instagramAutoCollector } = await import("./services/instagram-auto-collector");
+      
+      const result = await instagramAutoCollector.collectForCity(cityId);
+      
+      res.json({
+        message: `도시 내 모든 장소 Instagram 데이터 수집 완료`,
+        ...result,
+      });
+    } catch (error) {
+      console.error("Error collecting Instagram for city:", error);
+      res.status(500).json({ error: "Failed to collect Instagram data for city" });
+    }
+  });
+
+  app.get("/api/admin/places/:id/instagram", async (req, res) => {
+    try {
+      const placeId = parseInt(req.params.id);
+      
+      const place = await db.query.places.findFirst({
+        where: eq(places.id, placeId),
+      });
+      
+      if (!place) {
+        return res.status(404).json({ error: "Place not found" });
+      }
+      
+      res.json({
+        placeId: place.id,
+        name: place.name,
+        googlePhotoCount: place.photoUrls?.length || 0,
+        instagramPhotoCount: place.instagramPhotoUrls?.length || 0,
+        instagramHashtags: place.instagramHashtags || [],
+        instagramPostCount: place.instagramPostCount || 0,
+        photoUrls: {
+          google: place.photoUrls || [],
+          instagram: place.instagramPhotoUrls || [],
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching place Instagram data:", error);
+      res.status(500).json({ error: "Failed to fetch place Instagram data" });
+    }
+  });
 }

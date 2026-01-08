@@ -71,6 +71,17 @@ See `design_guidelines.md` for complete design system including:
 - Vibe score badges (purple 8+, orange 5-7, gray <5)
 
 ## Recent Changes
+- 2026-01-08: 사진 데이터 자동 수집 시스템 완성
+  - **Google Places 사진 확장**: 최대 10장, 1200px 고해상도로 수집
+  - **Instagram 자동 수집**: 장소 생성 시 해시태그 자동 생성 & 데이터 수집
+    - 장소명, 도시+유형 기반 해시태그 자동 생성 (최대 8개)
+    - 해시태그별 게시물 수, 사진 URL 자동 수집
+  - **places 테이블 확장**: instagramPhotoUrls, instagramHashtags, instagramPostCount 필드 추가
+  - **Admin API 추가**:
+    - `POST /api/admin/instagram/collect/place/:id` - 장소별 Instagram 수집
+    - `POST /api/admin/instagram/collect/city/:id` - 도시별 모든 장소 수집
+    - `GET /api/admin/places/:id/instagram` - 장소 사진 현황 조회
+  - **서비스 파일**: server/services/instagram-auto-collector.ts 신규 생성
 - 2026-01-08: Instagram 데이터 → VIBE 점수 연동 완료
   - **Buzz Score 반영**: Instagram 해시태그 게시물 수 25% 가중치
     - popularityScore = reviewVolume(30%) + rating(30%) + sourceCount(15%) + **instagram(25%)**
