@@ -11,6 +11,9 @@ import { itineraryGenerator } from "./services/itinerary-generator";
 import { registerChatRoutes } from "./replit_integrations/chat";
 import { registerImageRoutes } from "./replit_integrations/image";
 import { registerAdminRoutes } from "./admin-routes";
+import { db } from "./db";
+import { instagramHashtags, cities, youtubeChannels } from "../shared/schema";
+import { count } from "drizzle-orm";
 
 const BRAND_PRIMARY = "#6366F1";
 
@@ -410,5 +413,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // 서버 시작 시 기본 데이터 자동 시드
+  autoSeedDefaultData();
+  
   return httpServer;
+}
+
+async function autoSeedDefaultData() {
+  try {
+    // 해시태그 테이블이 비어있으면 자동 시드
+    const [hashtagCount] = await db.select({ count: count() }).from(instagramHashtags);
+    if (hashtagCount.count === 0) {
+      console.log('[AutoSeed] Instagram 해시태그 테이블이 비어있습니다. 기본 데이터를 입력합니다...');
+      await seedDefaultInstagramHashtags();
+      console.log('[AutoSeed] Instagram 해시태그 시드 완료');
+    }
+    
+    // 도시 테이블이 비어있으면 자동 시드
+    const [cityCount] = await db.select({ count: count() }).from(cities);
+    if (cityCount.count === 0) {
+      console.log('[AutoSeed] 도시 테이블이 비어있습니다. 기본 데이터를 입력합니다...');
+      await seedDefaultCities();
+      console.log('[AutoSeed] 도시 시드 완료');
+    }
+    
+    // YouTube 채널 테이블이 비어있으면 자동 시드
+    const [channelCount] = await db.select({ count: count() }).from(youtubeChannels);
+    if (channelCount.count === 0) {
+      console.log('[AutoSeed] YouTube 채널 테이블이 비어있습니다. 기본 데이터를 입력합니다...');
+      await seedDefaultYouTubeChannels();
+      console.log('[AutoSeed] YouTube 채널 시드 완료');
+    }
+  } catch (error) {
+    console.error('[AutoSeed] 자동 시드 오류:', error);
+  }
+}
+
+async function seedDefaultInstagramHashtags() {
+  const defaultHashtags = [
+    { hashtag: "#에펠탑", category: "landmark" },
+    { hashtag: "#toureiffel", category: "landmark" },
+    { hashtag: "#파리여행", category: "travel" },
+    { hashtag: "#파리맛집", category: "food" },
+    { hashtag: "#도쿄타워", category: "landmark" },
+    { hashtag: "#도쿄여행", category: "travel" },
+    { hashtag: "#도쿄맛집", category: "food" },
+    { hashtag: "#시부야", category: "landmark" },
+    { hashtag: "#센소지", category: "landmark" },
+    { hashtag: "#오사카여행", category: "travel" },
+    { hashtag: "#오사카맛집", category: "food" },
+    { hashtag: "#도톤보리", category: "landmark" },
+    { hashtag: "#서울여행", category: "travel" },
+    { hashtag: "#서울맛집", category: "food" },
+    { hashtag: "#경복궁", category: "landmark" },
+    { hashtag: "#남산타워", category: "landmark" },
+    { hashtag: "#홍대", category: "landmark" },
+    { hashtag: "#로마여행", category: "travel" },
+    { hashtag: "#콜로세움", category: "landmark" },
+    { hashtag: "#방콕여행", category: "travel" },
+    { hashtag: "#방콕맛집", category: "food" },
+    { hashtag: "#뉴욕여행", category: "travel" },
+    { hashtag: "#타임스퀘어", category: "landmark" },
+    { hashtag: "#런던여행", category: "travel" },
+    { hashtag: "#빅벤", category: "landmark" },
+    { hashtag: "#바르셀로나여행", category: "travel" },
+    { hashtag: "#사그라다파밀리아", category: "landmark" },
+    { hashtag: "#싱가포르여행", category: "travel" },
+    { hashtag: "#마리나베이샌즈", category: "landmark" },
+    { hashtag: "#홍콩여행", category: "travel" },
+    { hashtag: "#다낭여행", category: "travel" },
+    { hashtag: "#하노이여행", category: "travel" },
+  ];
+  
+  for (const tag of defaultHashtags) {
+    try {
+      await db.insert(instagramHashtags).values(tag).onConflictDoNothing();
+    } catch (e) {}
+  }
+}
+
+async function seedDefaultCities() {
+  const defaultCities = [
+    { name: "서울", country: "대한민국", countryCode: "KR", latitude: 37.5665, longitude: 126.9780, timezone: "Asia/Seoul", primaryLanguage: "ko" },
+    { name: "도쿄", country: "일본", countryCode: "JP", latitude: 35.6762, longitude: 139.6503, timezone: "Asia/Tokyo", primaryLanguage: "ja" },
+    { name: "오사카", country: "일본", countryCode: "JP", latitude: 34.6937, longitude: 135.5023, timezone: "Asia/Tokyo", primaryLanguage: "ja" },
+    { name: "파리", country: "프랑스", countryCode: "FR", latitude: 48.8566, longitude: 2.3522, timezone: "Europe/Paris", primaryLanguage: "fr" },
+    { name: "로마", country: "이탈리아", countryCode: "IT", latitude: 41.9028, longitude: 12.4964, timezone: "Europe/Rome", primaryLanguage: "it" },
+    { name: "방콕", country: "태국", countryCode: "TH", latitude: 13.7563, longitude: 100.5018, timezone: "Asia/Bangkok", primaryLanguage: "th" },
+    { name: "뉴욕", country: "미국", countryCode: "US", latitude: 40.7128, longitude: -74.0060, timezone: "America/New_York", primaryLanguage: "en" },
+    { name: "런던", country: "영국", countryCode: "GB", latitude: 51.5074, longitude: -0.1278, timezone: "Europe/London", primaryLanguage: "en" },
+    { name: "바르셀로나", country: "스페인", countryCode: "ES", latitude: 41.3851, longitude: 2.1734, timezone: "Europe/Madrid", primaryLanguage: "es" },
+    { name: "싱가포르", country: "싱가포르", countryCode: "SG", latitude: 1.3521, longitude: 103.8198, timezone: "Asia/Singapore", primaryLanguage: "en" },
+    { name: "홍콩", country: "홍콩", countryCode: "HK", latitude: 22.3193, longitude: 114.1694, timezone: "Asia/Hong_Kong", primaryLanguage: "zh" },
+    { name: "다낭", country: "베트남", countryCode: "VN", latitude: 16.0544, longitude: 108.2022, timezone: "Asia/Ho_Chi_Minh", primaryLanguage: "vi" },
+    { name: "하노이", country: "베트남", countryCode: "VN", latitude: 21.0285, longitude: 105.8542, timezone: "Asia/Ho_Chi_Minh", primaryLanguage: "vi" },
+  ];
+  
+  for (const city of defaultCities) {
+    try {
+      await db.insert(cities).values(city).onConflictDoNothing();
+    } catch (e) {}
+  }
+}
+
+async function seedDefaultYouTubeChannels() {
+  const defaultChannels = [
+    { channelId: "UC3mY_QDRF9lQvd_wXKfn", channelName: "성시경", channelUrl: "https://www.youtube.com/@sungsikyung", category: "food", trustWeight: 2.0 },
+    { channelId: "UC_BAEK_JONGWON", channelName: "백종원", channelUrl: "https://www.youtube.com/@paaborns", category: "food", trustWeight: 2.0 },
+    { channelId: "UCGrJqBQRypR7BMVp7lwnUUQ", channelName: "스트릿푸드파이터", channelUrl: "https://www.youtube.com/@StreetFoodFighter", category: "food", trustWeight: 2.0 },
+    { channelId: "UCsJ6RuBiTVLvNWb56-wr_aQ", channelName: "빠니보틀", channelUrl: "https://www.youtube.com/@ppanibottle", category: "travel", trustWeight: 1.9 },
+    { channelId: "UC_PARIS_OINOJA", channelName: "파리외노자", channelUrl: "https://www.youtube.com/@parisnoja", category: "travel", trustWeight: 1.9 },
+  ];
+  
+  for (const channel of defaultChannels) {
+    try {
+      await db.insert(youtubeChannels).values(channel).onConflictDoNothing();
+    } catch (e) {}
+  }
 }
