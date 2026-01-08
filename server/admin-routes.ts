@@ -978,6 +978,125 @@ export function registerAdminRoutes(app: Express) {
   });
 
   // ========================================
+  // 기본 Instagram 해시태그 시드
+  // ========================================
+  
+  app.post("/api/admin/seed/instagram", async (req, res) => {
+    try {
+      const defaultHashtags = [
+        // 파리 (프랑스)
+        { hashtag: "#에펠탑", category: "landmark", relatedCity: "파리" },
+        { hashtag: "#toureiffel", category: "landmark", relatedCity: "파리" },
+        { hashtag: "#파리여행", category: "travel", relatedCity: "파리" },
+        { hashtag: "#파리맛집", category: "food", relatedCity: "파리" },
+        { hashtag: "#몽마르뜨", category: "landmark", relatedCity: "파리" },
+        { hashtag: "#루브르", category: "landmark", relatedCity: "파리" },
+        { hashtag: "#샹젤리제", category: "landmark", relatedCity: "파리" },
+        
+        // 도쿄 (일본)
+        { hashtag: "#도쿄타워", category: "landmark", relatedCity: "도쿄" },
+        { hashtag: "#tokyotower", category: "landmark", relatedCity: "도쿄" },
+        { hashtag: "#도쿄여행", category: "travel", relatedCity: "도쿄" },
+        { hashtag: "#도쿄맛집", category: "food", relatedCity: "도쿄" },
+        { hashtag: "#시부야", category: "landmark", relatedCity: "도쿄" },
+        { hashtag: "#신주쿠", category: "landmark", relatedCity: "도쿄" },
+        { hashtag: "#아사쿠사", category: "landmark", relatedCity: "도쿄" },
+        { hashtag: "#센소지", category: "landmark", relatedCity: "도쿄" },
+        
+        // 오사카 (일본)
+        { hashtag: "#오사카여행", category: "travel", relatedCity: "오사카" },
+        { hashtag: "#오사카맛집", category: "food", relatedCity: "오사카" },
+        { hashtag: "#도톤보리", category: "landmark", relatedCity: "오사카" },
+        { hashtag: "#오사카성", category: "landmark", relatedCity: "오사카" },
+        { hashtag: "#난바", category: "landmark", relatedCity: "오사카" },
+        
+        // 서울 (한국)
+        { hashtag: "#서울여행", category: "travel", relatedCity: "서울" },
+        { hashtag: "#서울맛집", category: "food", relatedCity: "서울" },
+        { hashtag: "#경복궁", category: "landmark", relatedCity: "서울" },
+        { hashtag: "#남산타워", category: "landmark", relatedCity: "서울" },
+        { hashtag: "#명동", category: "landmark", relatedCity: "서울" },
+        { hashtag: "#홍대", category: "landmark", relatedCity: "서울" },
+        { hashtag: "#이태원", category: "landmark", relatedCity: "서울" },
+        
+        // 로마 (이탈리아)
+        { hashtag: "#로마여행", category: "travel", relatedCity: "로마" },
+        { hashtag: "#로마맛집", category: "food", relatedCity: "로마" },
+        { hashtag: "#콜로세움", category: "landmark", relatedCity: "로마" },
+        { hashtag: "#바티칸", category: "landmark", relatedCity: "로마" },
+        { hashtag: "#트레비분수", category: "landmark", relatedCity: "로마" },
+        
+        // 방콕 (태국)
+        { hashtag: "#방콕여행", category: "travel", relatedCity: "방콕" },
+        { hashtag: "#방콕맛집", category: "food", relatedCity: "방콕" },
+        { hashtag: "#카오산로드", category: "landmark", relatedCity: "방콕" },
+        { hashtag: "#왓포", category: "landmark", relatedCity: "방콕" },
+        { hashtag: "#아이콘시암", category: "landmark", relatedCity: "방콕" },
+        
+        // 뉴욕 (미국)
+        { hashtag: "#뉴욕여행", category: "travel", relatedCity: "뉴욕" },
+        { hashtag: "#뉴욕맛집", category: "food", relatedCity: "뉴욕" },
+        { hashtag: "#타임스퀘어", category: "landmark", relatedCity: "뉴욕" },
+        { hashtag: "#센트럴파크", category: "landmark", relatedCity: "뉴욕" },
+        { hashtag: "#자유의여신상", category: "landmark", relatedCity: "뉴욕" },
+        
+        // 런던 (영국)
+        { hashtag: "#런던여행", category: "travel", relatedCity: "런던" },
+        { hashtag: "#런던맛집", category: "food", relatedCity: "런던" },
+        { hashtag: "#빅벤", category: "landmark", relatedCity: "런던" },
+        { hashtag: "#타워브릿지", category: "landmark", relatedCity: "런던" },
+        
+        // 바르셀로나 (스페인)
+        { hashtag: "#바르셀로나여행", category: "travel", relatedCity: "바르셀로나" },
+        { hashtag: "#사그라다파밀리아", category: "landmark", relatedCity: "바르셀로나" },
+        { hashtag: "#구엘공원", category: "landmark", relatedCity: "바르셀로나" },
+        
+        // 싱가포르
+        { hashtag: "#싱가포르여행", category: "travel", relatedCity: "싱가포르" },
+        { hashtag: "#마리나베이샌즈", category: "landmark", relatedCity: "싱가포르" },
+        { hashtag: "#가든스바이더베이", category: "landmark", relatedCity: "싱가포르" },
+        
+        // 홍콩
+        { hashtag: "#홍콩여행", category: "travel", relatedCity: "홍콩" },
+        { hashtag: "#홍콩맛집", category: "food", relatedCity: "홍콩" },
+        { hashtag: "#빅토리아피크", category: "landmark", relatedCity: "홍콩" },
+        
+        // 다낭/베트남
+        { hashtag: "#다낭여행", category: "travel", relatedCity: "다낭" },
+        { hashtag: "#다낭맛집", category: "food", relatedCity: "다낭" },
+        { hashtag: "#바나힐", category: "landmark", relatedCity: "다낭" },
+        { hashtag: "#미케비치", category: "landmark", relatedCity: "다낭" },
+        { hashtag: "#하노이여행", category: "travel", relatedCity: "하노이" },
+        { hashtag: "#하노이맛집", category: "food", relatedCity: "하노이" },
+      ];
+      
+      let hashtagsAdded = 0;
+      
+      for (const tag of defaultHashtags) {
+        try {
+          await db
+            .insert(instagramHashtags)
+            .values({
+              hashtag: tag.hashtag,
+              category: tag.category,
+            })
+            .onConflictDoNothing();
+          hashtagsAdded++;
+        } catch (e) {
+        }
+      }
+      
+      res.json({ 
+        message: "기본 Instagram 해시태그가 추가되었습니다",
+        hashtagsAdded
+      });
+    } catch (error) {
+      console.error("Error seeding instagram hashtags:", error);
+      res.status(500).json({ error: "Failed to seed instagram hashtags" });
+    }
+  });
+
+  // ========================================
   // Instagram 해시태그 관리
   // ========================================
 
