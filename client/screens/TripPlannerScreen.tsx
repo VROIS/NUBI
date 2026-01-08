@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -14,9 +14,10 @@ import {
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Brand, Colors, Spacing, BorderRadius } from "@/constants/theme";
 import {
   TripFormData,
@@ -35,6 +36,8 @@ import {
 import { calculateVibeWeights, formatVibeWeightsSummary, getVibeLabel } from "@/utils/vibeCalculator";
 import { apiRequest } from "@/lib/query-client";
 import { InteractiveMap } from "@/components/InteractiveMap";
+import { isAuthenticated } from "@/lib/auth";
+import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 let DateTimePicker: any = null;
 if (Platform.OS !== "web") {
@@ -82,7 +85,7 @@ export default function TripPlannerScreen() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [screen, setScreen] = useState<ScreenState>("Input");
   const [loadingStep, setLoadingStep] = useState(0);
@@ -92,6 +95,20 @@ export default function TripPlannerScreen() {
   const [pickerMode, setPickerMode] = useState<PickerMode>(null);
   const [tempDate, setTempDate] = useState(new Date());
   const [showWebInput, setShowWebInput] = useState<PickerMode>(null);
+  const [pendingGenerate, setPendingGenerate] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (pendingGenerate) {
+        setPendingGenerate(false);
+        isAuthenticated().then(auth => {
+          if (auth) {
+            executeGenerate();
+          }
+        });
+      }
+    }, [pendingGenerate])
+  );
 
   const [formData, setFormData] = useState<TripFormData>({
     birthDate: "1985-06-15",
@@ -190,7 +207,7 @@ export default function TripPlannerScreen() {
     }
   };
 
-  const handleGenerate = async () => {
+  const executeGenerate = async () => {
     setScreen("Loading");
     setLoadingStep(0);
 
@@ -238,6 +255,16 @@ export default function TripPlannerScreen() {
         ],
       });
       setScreen("Result");
+    }
+  };
+
+  const handleGenerate = async () => {
+    const authenticated = await isAuthenticated();
+    if (authenticated) {
+      executeGenerate();
+    } else {
+      setPendingGenerate(true);
+      navigation.navigate("Onboarding");
     }
   };
 

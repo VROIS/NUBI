@@ -1,19 +1,14 @@
 import React from "react";
-import { View, Pressable, StyleSheet, Platform, useColorScheme, Linking } from "react-native";
+import { View, StyleSheet, Platform, useColorScheme } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { BlurView } from "expo-blur";
-import { useNavigation } from "@react-navigation/native";
-import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-import { Brand, Colors, Spacing, BorderRadius } from "@/constants/theme";
-import HomeScreen from "@/screens/HomeScreen";
+import { Brand, Colors } from "@/constants/theme";
+import TripPlannerScreen from "@/screens/TripPlannerScreen";
 import MapScreen from "@/screens/MapScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
 import AdminScreen from "@/screens/AdminScreen";
-import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 export type MainTabParamList = {
   Home: undefined;
@@ -29,36 +24,6 @@ function EmptyPlaceholder() {
   return <View style={{ flex: 1 }} />;
 }
 
-function FABButton() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const insets = useSafeAreaInsets();
-  
-  return (
-    <View 
-      style={[
-        styles.fabContainer,
-        { bottom: 55 + Math.max(insets.bottom, 0) },
-      ]}
-    >
-      <Pressable
-        onPress={() => navigation.navigate("TripPlanner")}
-        style={({ pressed }) => [
-          styles.fab,
-          pressed && styles.fabPressed,
-        ]}
-      >
-        <LinearGradient
-          colors={Brand.gradient as [string, string]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.fabGradient}
-        >
-          <Feather name="plus" size={28} color="#FFFFFF" />
-        </LinearGradient>
-      </Pressable>
-    </View>
-  );
-}
 
 export default function MainTabNavigator() {
   const colorScheme = useColorScheme();
@@ -70,7 +35,7 @@ export default function MainTabNavigator() {
     
     switch (routeName) {
       case "Home":
-        iconName = "compass";
+        iconName = "edit-3";
         break;
       case "Map":
         iconName = "map";
@@ -130,9 +95,9 @@ export default function MainTabNavigator() {
       >
         <Tab.Screen
           name="Home"
-          component={HomeScreen}
+          component={TripPlannerScreen}
           options={{
-            tabBarLabel: "탐색",
+            tabBarLabel: "일정",
             headerShown: false,
           }}
         />

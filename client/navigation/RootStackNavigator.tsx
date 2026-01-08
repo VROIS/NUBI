@@ -2,7 +2,6 @@ import React from "react";
 import { Platform, useColorScheme } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MainTabNavigator from "@/navigation/MainTabNavigator";
-import TripPlannerScreen from "@/screens/TripPlannerScreen";
 import DestinationDetailScreen from "@/screens/DestinationDetailScreen";
 import OnboardingScreen from "@/screens/OnboardingScreen";
 import { Colors } from "@/constants/theme";
@@ -10,7 +9,6 @@ import { Colors } from "@/constants/theme";
 export type RootStackParamList = {
   Main: undefined;
   Onboarding: undefined;
-  TripPlanner: undefined;
   DestinationDetail: { placeId: number };
 };
 
@@ -54,14 +52,6 @@ export default function RootStackNavigator() {
         options={{
           headerShown: false,
           presentation: "card",
-        }}
-      />
-      <Stack.Screen
-        name="TripPlanner"
-        component={TripPlannerScreen}
-        options={{
-          headerShown: false,
-          presentation: "fullScreenModal",
         }}
       />
       <Stack.Screen

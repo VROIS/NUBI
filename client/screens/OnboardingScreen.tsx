@@ -134,7 +134,7 @@ export default function OnboardingScreen() {
     await saveAuth(userData);
     navigation.reset({
       index: 0,
-      routes: [{ name: "Main" }, { name: "TripPlanner" }],
+      routes: [{ name: "Main" }],
     });
   };
 
