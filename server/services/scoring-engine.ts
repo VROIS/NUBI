@@ -2,6 +2,7 @@ import { storage } from "../storage";
 import { vibeProcessor } from "./vibe-processor";
 import { tasteVerifier } from "./taste-verifier";
 import { weatherFetcher } from "./weather";
+import { getActiveCrisisAlerts } from "./crisis-crawler";
 import type { Place } from "@shared/schema";
 
 interface FinalScoreComponents {
@@ -53,6 +54,16 @@ export class ScoringEngine {
       const weather = await weatherFetcher.getWeatherForCity(city.id);
       if (weather) {
         realityPenalty += weather.penalty || 0;
+      }
+      
+      try {
+        const crisisAlerts = await getActiveCrisisAlerts(city.id);
+        for (const alert of crisisAlerts) {
+          const severityPenalty = (alert.severity / 5) * 2;
+          realityPenalty += severityPenalty;
+        }
+      } catch (error) {
+        console.error(`Failed to get crisis alerts for city ${city.id}:`, error);
       }
     }
 
