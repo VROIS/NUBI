@@ -426,6 +426,49 @@ export const exchangeRates = pgTable("exchange_rates", {
   fetchedAt: timestamp("fetched_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+// 위기 정보 알림 (GDELT/NewsAPI)
+export const crisisAlerts = pgTable("crisis_alerts", {
+  id: serial("id").primaryKey(),
+  cityId: integer("city_id").references(() => cities.id, { onDelete: "cascade" }),
+  countryCode: text("country_code"),
+  alertType: text("alert_type").notNull(), // natural_disaster, terrorism, civil_unrest, health, travel_advisory
+  severity: integer("severity").notNull(), // 1-5 (1: minor, 5: critical)
+  title: text("title").notNull(),
+  description: text("description"),
+  sourceUrl: text("source_url"),
+  sourceName: text("source_name"), // GDELT, NewsAPI, etc.
+  affectedAreas: jsonb("affected_areas").$type<string[]>().default([]),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  geminiAnalysis: text("gemini_analysis"), // Gemini's analysis summary
+  impactScore: real("impact_score"), // 0-10 impact on travel
+  isActive: boolean("is_active").default(true),
+  fetchedAt: timestamp("fetched_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
+// Gemini Web Search 결과 캐시 (미슐랭/TripAdvisor)
+export const geminiWebSearchCache = pgTable("gemini_web_search_cache", {
+  id: serial("id").primaryKey(),
+  placeId: integer("place_id").references(() => places.id, { onDelete: "cascade" }),
+  cityId: integer("city_id").references(() => cities.id, { onDelete: "cascade" }),
+  searchQuery: text("search_query").notNull(),
+  searchType: text("search_type").notNull(), // michelin, tripadvisor, local_blog, expert_review
+  rawResult: jsonb("raw_result"), // Raw Gemini response
+  extractedData: jsonb("extracted_data").$type<{
+    michelinStars?: number;
+    michelinDescription?: string;
+    tripAdvisorRating?: number;
+    tripAdvisorReviewCount?: number;
+    expertReviews?: { source: string; rating: number; summary: string }[];
+    awards?: string[];
+  }>(),
+  confidenceScore: real("confidence_score"), // 0-1 confidence in extracted data
+  isVerified: boolean("is_verified").default(false),
+  expiresAt: timestamp("expires_at"),
+  fetchedAt: timestamp("fetched_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
 // 데이터 수집 스케줄
 export const dataCollectionSchedule = pgTable("data_collection_schedule", {
   id: serial("id").primaryKey(),
@@ -554,6 +597,8 @@ export type YoutubePlaceMention = typeof youtubePlaceMentions.$inferSelect;
 export type BlogSource = typeof blogSources.$inferSelect;
 export type ExchangeRate = typeof exchangeRates.$inferSelect;
 export type DataCollectionSchedule = typeof dataCollectionSchedule.$inferSelect;
+export type CrisisAlert = typeof crisisAlerts.$inferSelect;
+export type GeminiWebSearchCache = typeof geminiWebSearchCache.$inferSelect;
 
 // Re-export chat models
 export * from "./models/chat";
