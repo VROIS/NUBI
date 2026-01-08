@@ -1,5 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { storage } from "../storage";
+import { db } from "../db";
+import { instagramHashtags, instagramLocations, instagramPhotos } from "@shared/schema";
+import { eq, like, ilike, or, sql } from "drizzle-orm";
 import type { VibeAnalysis, Place } from "@shared/schema";
 
 const ai = new GoogleGenAI({
@@ -124,13 +127,30 @@ JSON 형식으로만 응답해주세요:
 
     avgRating = sourceCount > 0 ? avgRating / sourceCount : 0;
 
+    // Instagram 해시태그 인기도 가져오기
+    const instagramBuzz = await this.getInstagramBuzzForPlace(place);
+    
     const reviewVolumeScore = Math.min(10, Math.log10(totalReviews + 1) * 2.5);
     const ratingScore = avgRating * 2;
     const sourceScore = Math.min(10, sourceCount * 2.5);
 
-    const popularityScore = (reviewVolumeScore * 0.4 + ratingScore * 0.4 + sourceScore * 0.2);
-    const trendingScore = 5;
-    const localBuzzScore = 5;
+    // Instagram 인기도 점수 (해시태그 게시물 수 기반)
+    const instagramScore = instagramBuzz.score;
+
+    // 기존: popularityScore = reviewVolume(40%) + rating(40%) + sourceCount(20%)
+    // 변경: popularityScore = reviewVolume(30%) + rating(30%) + sourceCount(15%) + instagram(25%)
+    const popularityScore = (
+      reviewVolumeScore * 0.3 + 
+      ratingScore * 0.3 + 
+      sourceScore * 0.15 +
+      instagramScore * 0.25
+    );
+    
+    // trendingScore: Instagram 최근 게시물 트렌드 반영
+    const trendingScore = instagramBuzz.hasTrending ? 7 : 5;
+    
+    // localBuzzScore: 한국어 해시태그 존재 여부로 한국인 인기 측정
+    const localBuzzScore = instagramBuzz.hasKoreanHashtag ? 7 : 5;
 
     const overallBuzzScore = (popularityScore * 0.5 + trendingScore * 0.25 + localBuzzScore * 0.25);
 
@@ -142,6 +162,67 @@ JSON 형식으로만 응답해주세요:
     };
   }
 
+  private async getInstagramBuzzForPlace(place: Place): Promise<{
+    score: number;
+    hasTrending: boolean;
+    hasKoreanHashtag: boolean;
+    totalPosts: number;
+  }> {
+    try {
+      // 장소명으로 관련 해시태그 검색
+      const placeName = place.name.toLowerCase();
+      const placeNameKo = place.nameKorean?.toLowerCase() || '';
+      
+      // 해시태그에서 장소명이 포함된 것들 찾기
+      const relatedHashtags = await db.select()
+        .from(instagramHashtags)
+        .where(
+          or(
+            ilike(instagramHashtags.hashtag, `%${placeName}%`),
+            placeNameKo ? ilike(instagramHashtags.hashtag, `%${placeNameKo}%`) : sql`false`
+          )
+        );
+
+      if (relatedHashtags.length === 0) {
+        return { score: 5, hasTrending: false, hasKoreanHashtag: false, totalPosts: 0 };
+      }
+
+      // 총 게시물 수 합산
+      let totalPosts = 0;
+      let hasKoreanHashtag = false;
+      let hasTrending = false;
+
+      for (const tag of relatedHashtags) {
+        totalPosts += tag.postCount || 0;
+        
+        // 한국어 해시태그 체크 (한글 포함 여부)
+        if (/[가-힣]/.test(tag.hashtag)) {
+          hasKoreanHashtag = true;
+        }
+        
+        // 트렌딩: 최근 7일 내 동기화된 해시태그 중 게시물 10만 이상
+        if (tag.lastSyncAt) {
+          const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+          if (new Date(tag.lastSyncAt) > weekAgo && (tag.postCount || 0) > 100000) {
+            hasTrending = true;
+          }
+        }
+      }
+
+      // 게시물 수 → 점수 변환 (로그 스케일)
+      // 1,000 게시물 → 3점, 10,000 → 5점, 100,000 → 7점, 1,000,000 → 9점
+      let score = 5;
+      if (totalPosts > 0) {
+        score = Math.min(10, Math.max(1, Math.log10(totalPosts) * 2));
+      }
+
+      return { score, hasTrending, hasKoreanHashtag, totalPosts };
+    } catch (error) {
+      console.error('Failed to get Instagram buzz:', error);
+      return { score: 5, hasTrending: false, hasKoreanHashtag: false, totalPosts: 0 };
+    }
+  }
+
   async processPlaceVibe(placeId: number): Promise<{ vibeScore: number; buzzScore: number }> {
     const place = await storage.getPlace(placeId);
     if (!place) {
@@ -150,11 +231,20 @@ JSON 형식으로만 응답해주세요:
 
     let vibeScore = 5;
     const photoUrls = place.photoUrls as string[] || [];
+    
+    // Instagram 사진 가져오기
+    const instagramPhotoUrls = await this.getInstagramPhotosForPlace(place);
+    
+    // Google Photos (최대 2장) + Instagram Photos (최대 1장) 조합
+    const allPhotos = [
+      ...photoUrls.slice(0, 2),
+      ...instagramPhotoUrls.slice(0, 1)
+    ];
 
-    if (photoUrls.length > 0) {
+    if (allPhotos.length > 0) {
       const vibeResults: VibeScoreResult[] = [];
       
-      for (const photoUrl of photoUrls.slice(0, 3)) {
+      for (const photoUrl of allPhotos.slice(0, 3)) {
         try {
           const result = await this.analyzeImageVibe(photoUrl);
           vibeResults.push(result);
@@ -187,6 +277,42 @@ JSON 형식으로만 응답해주세요:
     });
 
     return { vibeScore, buzzScore: buzzResult.overallBuzzScore };
+  }
+
+  private async getInstagramPhotosForPlace(place: Place): Promise<string[]> {
+    try {
+      const placeName = place.name.toLowerCase();
+      const placeNameKo = place.nameKorean?.toLowerCase() || '';
+      
+      // 장소와 관련된 해시태그 찾기
+      const relatedHashtags = await db.select()
+        .from(instagramHashtags)
+        .where(
+          or(
+            ilike(instagramHashtags.hashtag, `%${placeName}%`),
+            placeNameKo ? ilike(instagramHashtags.hashtag, `%${placeNameKo}%`) : sql`false`
+          )
+        );
+
+      if (relatedHashtags.length === 0) {
+        return [];
+      }
+
+      // 관련 해시태그의 사진 가져오기
+      const hashtagIds = relatedHashtags.map(h => h.id);
+      
+      const photos = await db.select()
+        .from(instagramPhotos)
+        .where(
+          sql`${instagramPhotos.hashtagId} = ANY(${hashtagIds})`
+        )
+        .limit(3);
+
+      return photos.map(p => p.photoUrl).filter((url): url is string => !!url);
+    } catch (error) {
+      console.error('Failed to get Instagram photos for place:', error);
+      return [];
+    }
   }
 
   async processCityPlaces(cityId: number): Promise<{ processed: number; failed: number }> {
