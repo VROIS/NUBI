@@ -59,7 +59,7 @@ async function searchBlogWithGemini(query: string): Promise<NaverBlogSearchResul
     const { ai } = await import("../replit_integrations/image/client");
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: `Search for Korean travel blog posts about: ${query}
 
 Find recent blog posts from Korean travelers. Return JSON array:
@@ -99,7 +99,7 @@ async function extractPlacesFromBlog(
     const { ai } = await import("../replit_integrations/image/client");
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: `Analyze this Korean travel blog post about ${cityName}:
 
 Title: ${title}

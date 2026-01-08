@@ -157,7 +157,7 @@ async function fetchWeatherWithGemini(
     const { ai } = await import("../replit_integrations/image/client");
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: `What is the current weather and 5-day forecast for ${cityName}?
 
 Return JSON:
