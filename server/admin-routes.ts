@@ -20,7 +20,8 @@ import {
   instagramLocations,
   instagramPhotos,
   crisisAlerts,
-  geminiWebSearchCache
+  geminiWebSearchCache,
+  placePrices
 } from "../shared/schema";
 import { instagramCrawler } from "./services/instagram-crawler";
 import { eq, desc, sql, count, and, gte } from "drizzle-orm";
@@ -1613,6 +1614,62 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Error searching TripAdvisor info:", error);
       res.status(500).json({ error: "Failed to search TripAdvisor info" });
+    }
+  });
+
+  // ========================================
+  // 가격 정보 API
+  // ========================================
+
+  app.get("/api/admin/prices/stats", async (req, res) => {
+    try {
+      const { getPriceStats } = await import("./services/price-crawler");
+      const stats = await getPriceStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching price stats:", error);
+      res.status(500).json({ error: "Failed to fetch price stats" });
+    }
+  });
+
+  app.get("/api/admin/prices/place/:placeId", async (req, res) => {
+    try {
+      const placeId = parseInt(req.params.placeId);
+      const { getPlacePrices } = await import("./services/price-crawler");
+      const result = await getPlacePrices(placeId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching place prices:", error);
+      res.status(500).json({ error: "Failed to fetch place prices" });
+    }
+  });
+
+  app.post("/api/admin/prices/sync/city/:cityId", async (req, res) => {
+    try {
+      const cityId = parseInt(req.params.cityId);
+      const { crawlPricesForCity } = await import("./services/price-crawler");
+      const result = await crawlPricesForCity(cityId);
+      res.json({
+        message: "가격 정보 수집 완료",
+        ...result
+      });
+    } catch (error) {
+      console.error("Error syncing city prices:", error);
+      res.status(500).json({ error: "Failed to sync city prices" });
+    }
+  });
+
+  app.post("/api/admin/prices/sync/all", async (req, res) => {
+    try {
+      const { crawlAllPrices } = await import("./services/price-crawler");
+      const result = await crawlAllPrices();
+      res.json({
+        message: "전체 가격 정보 수집 완료",
+        ...result
+      });
+    } catch (error) {
+      console.error("Error syncing all prices:", error);
+      res.status(500).json({ error: "Failed to sync all prices" });
     }
   });
 }
