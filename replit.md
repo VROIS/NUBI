@@ -83,6 +83,13 @@ See `design_guidelines.md` for complete design system including:
   - DB 스키마: instagram_hashtags, instagram_locations, instagram_photos
   - 크롤러: 해시태그/위치 게시물 수 수집, 3초 rate limiting
   - Admin Dashboard: Instagram 탭 추가 (해시태그/위치 CRUD)
+- 2026-01-08: 기본 데이터 자동 시드 시스템 구현
+  - **서버 시작 시 자동 시드**: 테이블이 비어있으면 기본 데이터 자동 입력
+    - Instagram 해시태그 32개 (파리, 도쿄, 오사카, 서울, 로마, 방콕, 뉴욕 등)
+    - 도시 13개 (인기 여행지)
+    - YouTube 채널 5개 (성시경, 백종원, 빠니보틀 등)
+  - **Admin Dashboard 버튼**: "기본 해시태그 입력" 버튼 추가
+  - **시드 API**: `/api/admin/seed/instagram` 엔드포인트 추가
 - 2026-01-06 02:30 KST: 장기 여행 일정 생성 시스템 완성
   - **경로 최적화**: 지리적 그룹핑 + Nearest-neighbor 알고리즘으로 도시별 연속 일정 배치
   - **장기 여행 지원**: 10일, 11일, 30일 등 장기 여행 완전 지원 (Day 탭 무제한)
