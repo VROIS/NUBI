@@ -2121,6 +2121,58 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // 가이드 가격 추가
+  app.post("/api/admin/guide-prices", async (req, res) => {
+    try {
+      const { guidePrices } = await import("../shared/schema");
+      const { serviceType, serviceName, pricePerDay, priceLow, priceHigh, unit, description, features } = req.body;
+      
+      if (!serviceType || !serviceName) {
+        return res.status(400).json({ error: "서비스 유형과 이름은 필수입니다" });
+      }
+      
+      const [created] = await db.insert(guidePrices).values({
+        serviceType,
+        serviceName,
+        pricePerDay: pricePerDay || null,
+        priceLow: priceLow || null,
+        priceHigh: priceHigh || null,
+        currency: 'EUR',
+        unit: unit || 'day',
+        description: description || '',
+        features: features || [],
+        isActive: true,
+        source: 'admin_added',
+      }).returning();
+      
+      res.json(created);
+    } catch (error) {
+      console.error("Error creating guide price:", error);
+      res.status(500).json({ error: "Failed to create guide price" });
+    }
+  });
+
+  // 가이드 가격 삭제
+  app.delete("/api/admin/guide-prices/:id", async (req, res) => {
+    try {
+      const { guidePrices } = await import("../shared/schema");
+      const id = parseInt(req.params.id);
+      
+      const [deleted] = await db.delete(guidePrices)
+        .where(eq(guidePrices.id, id))
+        .returning();
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Guide price not found" });
+      }
+      
+      res.json({ success: true, deleted });
+    } catch (error) {
+      console.error("Error deleting guide price:", error);
+      res.status(500).json({ error: "Failed to delete guide price" });
+    }
+  });
+
   app.post("/api/admin/guide-prices/seed", async (req, res) => {
     try {
       const { guidePrices } = await import("../shared/schema");
