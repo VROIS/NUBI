@@ -655,16 +655,14 @@ export default function TripPlannerScreen() {
     setVerificationSubmitting(true);
     try {
       const userId = `user_${Date.now()}`;
-      const response = await apiRequest("/api/verification/request", {
-        method: "POST",
-        body: JSON.stringify({
-          userId,
-          itineraryData: itinerary,
-          userMessage: verificationMessage || null,
-        }),
+      const response = await apiRequest("POST", "/api/verification/request", {
+        userId,
+        itineraryData: itinerary,
+        userMessage: verificationMessage || null,
       });
       
-      if (response.success) {
+      const result = await response.json();
+      if (result.success) {
         setShowVerificationModal(false);
         setVerificationMessage("");
         Alert.alert(

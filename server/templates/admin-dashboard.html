@@ -278,6 +278,7 @@
       <button class="tab" data-tab="api">API 상태</button>
       <button class="tab" data-tab="logs">동기화 로그</button>
       <button class="tab" data-tab="guide-prices">가이드 가격</button>
+      <button class="tab" data-tab="verifications">검증 요청</button>
     </div>
     
     <div id="tab-overview" class="tab-content">
@@ -632,6 +633,40 @@
       </div>
     </div>
 
+    <div id="tab-verifications" class="tab-content" style="display: none;">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <h2 style="margin-bottom: 4px;">검증 요청 관리</h2>
+            <p style="color: #9ca3af; font-size: 14px;">사용자들이 요청한 일정 검증 내역</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <select id="verification-status-filter" class="form-input" style="min-width: 120px;" onchange="loadVerifications()">
+              <option value="">전체</option>
+              <option value="pending">대기중</option>
+              <option value="in_review">검토중</option>
+              <option value="verified">완료</option>
+              <option value="rejected">거절</option>
+            </select>
+            <button class="btn btn-secondary" onclick="loadVerifications()">새로고침</button>
+          </div>
+        </div>
+        <div id="verifications-list" style="display: flex; flex-direction: column; gap: 12px;">
+          <div class="loading"><div class="spinner"></div>로딩 중...</div>
+        </div>
+      </div>
+      
+      <div id="verification-detail-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; overflow-y: auto;">
+        <div class="card" style="width: 95%; max-width: 800px; margin: 40px auto; max-height: 90vh; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2>검증 요청 상세</h2>
+            <button class="btn btn-secondary" onclick="closeVerificationModal()">닫기</button>
+          </div>
+          <div id="verification-detail-content"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
   
   <script>
@@ -670,6 +705,7 @@
         case 'api': loadApiDetail(); loadApiRealStatus(); break;
         case 'logs': loadLogs(); break;
         case 'guide-prices': loadGuidePrices(); break;
+        case 'verifications': loadVerifications(); break;
       }
     }
     
@@ -1792,6 +1828,169 @@
         startAutoRefresh();
       }
     });
+    
+    const VERIFICATION_STATUS_MAP = {
+      'pending': { label: '대기중', color: '#f59e0b', bg: 'rgba(245,158,11,0.2)' },
+      'in_review': { label: '검토중', color: '#3b82f6', bg: 'rgba(59,130,246,0.2)' },
+      'verified': { label: '완료', color: '#22c55e', bg: 'rgba(34,197,94,0.2)' },
+      'rejected': { label: '거절', color: '#ef4444', bg: 'rgba(239,68,68,0.2)' }
+    };
+    
+    async function loadVerifications() {
+      const container = document.getElementById('verifications-list');
+      const statusFilter = document.getElementById('verification-status-filter').value;
+      
+      try {
+        let url = '/api/verification/requests';
+        if (statusFilter) url += `?status=${statusFilter}`;
+        
+        const res = await fetch(url);
+        const requests = await res.json();
+        
+        if (requests.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #6b7280;">
+              <p>검증 요청이 없습니다</p>
+            </div>`;
+          return;
+        }
+        
+        container.innerHTML = requests.map(req => {
+          const status = VERIFICATION_STATUS_MAP[req.status] || VERIFICATION_STATUS_MAP.pending;
+          const itinerary = req.itineraryData || {};
+          const createdAt = new Date(req.createdAt).toLocaleDateString('ko-KR');
+          
+          return `
+            <div class="service-item" style="display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 16px; cursor: pointer;" onclick="openVerificationDetail(${req.id})">
+              <span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: ${status.bg}; color: ${status.color};">
+                ${status.label}
+              </span>
+              <div>
+                <div style="font-weight: 600; font-size: 15px;">${itinerary.destination || '알 수 없음'} - ${itinerary.days?.length || 0}일</div>
+                <div style="font-size: 12px; color: #6b7280; margin-top: 2px;">
+                  ${itinerary.startDate || ''} ~ ${itinerary.endDate || ''} | 요청일: ${createdAt}
+                </div>
+                ${req.userMessage ? `<div style="font-size: 12px; color: #9ca3af; margin-top: 4px; font-style: italic;">"${req.userMessage.substring(0, 50)}${req.userMessage.length > 50 ? '...' : ''}"</div>` : ''}
+              </div>
+              <div style="text-align: right; font-size: 12px; color: #6b7280;">
+                #${req.id}
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = `<div style="color: #ef4444;">로딩 실패: ${err.message}</div>`;
+      }
+    }
+    
+    async function openVerificationDetail(id) {
+      const modal = document.getElementById('verification-detail-modal');
+      const content = document.getElementById('verification-detail-content');
+      
+      content.innerHTML = '<div class="loading"><div class="spinner"></div>로딩 중...</div>';
+      modal.style.display = 'flex';
+      
+      try {
+        const res = await fetch(`/api/verification/requests/${id}`);
+        const req = await res.json();
+        const status = VERIFICATION_STATUS_MAP[req.status] || VERIFICATION_STATUS_MAP.pending;
+        const itinerary = req.itineraryData || {};
+        
+        let placesHtml = '';
+        if (itinerary.days && itinerary.days.length > 0) {
+          itinerary.days.forEach((day, dayIdx) => {
+            placesHtml += `<div style="margin-bottom: 16px;">
+              <div style="font-weight: 600; margin-bottom: 8px; color: #a78bfa;">Day ${day.day} - ${day.city || ''}</div>
+              ${(day.places || []).map((p, pIdx) => `
+                <div style="display: flex; gap: 12px; padding: 8px; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 4px;">
+                  <span style="color: #a78bfa; font-weight: 600;">${pIdx + 1}</span>
+                  <div style="flex: 1;">
+                    <div style="font-weight: 500;">${p.name}</div>
+                    <div style="font-size: 12px; color: #6b7280;">${p.startTime || ''} - ${p.endTime || ''}</div>
+                  </div>
+                  <span style="color: #22c55e; font-size: 12px;">Score: ${p.vibeScore || 0}</span>
+                </div>
+              `).join('')}
+            </div>`;
+          });
+        }
+        
+        content.innerHTML = `
+          <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 16px;">
+            <span style="padding: 6px 16px; border-radius: 16px; font-size: 14px; font-weight: 600; background: ${status.bg}; color: ${status.color};">
+              ${status.label}
+            </span>
+            <span style="color: #6b7280; font-size: 14px;">#${req.id} | ${new Date(req.createdAt).toLocaleString('ko-KR')}</span>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 12px;">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">목적지</div>
+              <div style="font-size: 18px; font-weight: 700;">${itinerary.destination || '-'}</div>
+            </div>
+            <div style="padding: 16px; background: rgba(255,255,255,0.03); border-radius: 12px;">
+              <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">여행 기간</div>
+              <div style="font-size: 18px; font-weight: 700;">${itinerary.days?.length || 0}일</div>
+              <div style="font-size: 12px; color: #6b7280;">${itinerary.startDate || ''} ~ ${itinerary.endDate || ''}</div>
+            </div>
+          </div>
+          
+          ${req.userMessage ? `
+            <div style="padding: 16px; background: rgba(167,139,250,0.1); border-radius: 12px; margin-bottom: 16px;">
+              <div style="font-size: 12px; color: #a78bfa; margin-bottom: 4px;">사용자 메시지</div>
+              <div style="font-size: 14px;">${req.userMessage}</div>
+            </div>
+          ` : ''}
+          
+          <div style="margin-bottom: 16px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">일정 상세</div>
+            <div style="max-height: 300px; overflow-y: auto;">
+              ${placesHtml || '<div style="color: #6b7280;">일정 정보 없음</div>'}
+            </div>
+          </div>
+          
+          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+            <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">관리자 코멘트</div>
+            <textarea id="admin-comment-${req.id}" class="form-input" style="width: 100%; min-height: 80px; margin-bottom: 12px;" placeholder="사용자에게 전달할 코멘트를 입력하세요...">${req.adminComment || ''}</textarea>
+            
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <button class="btn btn-secondary" onclick="updateVerificationStatus(${req.id}, 'in_review')">검토중</button>
+              <button class="btn" style="background: rgba(239,68,68,0.2); color: #ef4444;" onclick="updateVerificationStatus(${req.id}, 'rejected')">거절</button>
+              <button class="btn btn-primary" onclick="updateVerificationStatus(${req.id}, 'verified')">검증 완료</button>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        content.innerHTML = `<div style="color: #ef4444;">로딩 실패: ${err.message}</div>`;
+      }
+    }
+    
+    function closeVerificationModal() {
+      document.getElementById('verification-detail-modal').style.display = 'none';
+    }
+    
+    async function updateVerificationStatus(id, status) {
+      const comment = document.getElementById(`admin-comment-${id}`)?.value || '';
+      
+      try {
+        const res = await fetch(`/api/verification/requests/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status, adminComment: comment })
+        });
+        
+        if (res.ok) {
+          closeVerificationModal();
+          loadVerifications();
+          alert(status === 'verified' ? '검증이 완료되었습니다' : '상태가 업데이트되었습니다');
+        } else {
+          alert('업데이트에 실패했습니다');
+        }
+      } catch (err) {
+        alert('오류: ' + err.message);
+      }
+    }
   </script>
 </body>
 </html>
