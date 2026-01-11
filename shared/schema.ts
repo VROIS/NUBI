@@ -538,6 +538,25 @@ export const guidePrices = pgTable("guide_prices", {
   createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
 });
 
+export const verificationStatusEnum = pgEnum("verification_status", ["pending", "in_review", "verified", "rejected"]);
+
+export const verificationRequests = pgTable("verification_requests", {
+  id: serial("id").primaryKey(),
+  itineraryId: integer("itinerary_id").notNull(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  itineraryData: jsonb("itinerary_data").notNull(),
+  userMessage: text("user_message"),
+  preferredDate: timestamp("preferred_date"),
+  contactEmail: text("contact_email"),
+  contactKakao: text("contact_kakao"),
+  status: verificationStatusEnum("status").default("pending"),
+  adminComment: text("admin_comment"),
+  placeRatings: jsonb("place_ratings").$type<Record<string, { checked: boolean; rating: number; comment?: string }>>(),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+});
+
 // 날씨 예보 캐시
 export const weatherForecast = pgTable("weather_forecast", {
   id: serial("id").primaryKey(),
@@ -716,6 +735,7 @@ export type PlacePrice = typeof placePrices.$inferSelect;
 export type NaverBlogPost = typeof naverBlogPosts.$inferSelect;
 export type WeatherForecast = typeof weatherForecast.$inferSelect;
 export type GuidePrice = typeof guidePrices.$inferSelect;
+export type VerificationRequest = typeof verificationRequests.$inferSelect;
 
 // Re-export chat models
 export * from "./models/chat";
