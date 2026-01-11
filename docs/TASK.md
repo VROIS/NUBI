@@ -207,15 +207,17 @@ Final Score = min(10, max(0, Personalized Score))
 ##### 📋 구현 작업 목록
 | 순서 | 작업 | 상태 | 예상시간 |
 |------|------|------|----------|
-| B-1 | trip.ts에 travelPace 'Normal', mobilityStyle 'Moderate' 추가 | ⬜ | 15분 |
-| B-2 | TripPlannerScreen UI에 3단계 선택 버튼 추가 | ⬜ | 30분 |
-| B-3 | userPreferences JSON 변환 함수 (priceLevel, placesPerDay, radiusKm) | ⬜ | 30분 |
-| B-4 | Vibe Match 점수 계산 로직 (사용자 vibes ↔ 장소 vibeKeywords) | ⬜ | 1시간 |
-| B-5 | Companion Bonus 로직 (장소 속성 매칭) | ⬜ | 30분 |
-| B-6 | Style Bonus 로직 (priceLevel 매칭) | ⬜ | 30분 |
-| B-7 | 로딩 화면 개선 - 단계별 분석 시각화 + 소수점 점수 | ⬜ | 1시간 |
-| B-8 | itinerary-generator.ts Gemini 프롬프트 개선 (JSON 구조 활용) | ⬜ | 1시간 |
-| B-9 | 통합 테스트 | ⬜ | 30분 |
+| B-1 | trip.ts에 travelPace 'Normal', mobilityStyle 'Moderate' 추가 + travelStyle 시나리오 정보 | ✅ | 15분 |
+| B-2 | scoring-engine.ts - calculatePersonalizedScore 함수 구현 | ✅ | 1시간 |
+| B-3 | Vibe Match 점수 계산 로직 (사용자 vibes ↔ 장소 vibeKeywords) | ✅ | - |
+| B-4 | Companion Bonus 로직 (장소 속성 매칭) | ✅ | - |
+| B-5 | Style Bonus 로직 (priceLevel 매칭) | ✅ | - |
+| B-6 | 예산 계산 로직 - france-transport-prices-2026.json 활용 | ⬜ | 1시간 |
+| B-7 | TripPlannerScreen UI에 3단계 선택 버튼 추가 (Pace/Mobility) | ⬜ | 30분 |
+| B-8 | 로딩 화면 개선 - 단계별 분석 시각화 + 소수점 점수 | ⬜ | 1시간 |
+| B-9 | 일정 결과 화면 - 일별 동선 + 썸네일 + ★점수 + 비용 합산/인당 | ⬜ | 2시간 |
+| B-10 | itinerary-generator.ts Gemini 프롬프트 개선 (JSON 구조 활용) | ⬜ | 1시간 |
+| B-11 | 통합 테스트 | ⬜ | 30분 |
 
 #### Phase C: 관제 현황판 강화 ✅ 완료
 | 순서 | 작업 | 상태 | 예상시간 |
