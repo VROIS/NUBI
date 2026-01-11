@@ -11,7 +11,25 @@ VibeTrip is a hyper-personalized AI travel agent Expo mobile app that transforms
 ## System Architecture
 VibeTrip is built as an Expo (React Native) mobile application with a React Navigation 7 and TanStack Query frontend. The backend uses Express and TypeScript with Drizzle ORM and PostgreSQL (Neon) for the database. AI capabilities are powered by Gemini 3.0 Flash via Replit AI Integrations.
 
-The core recommendation engine relies on a proprietary scoring system: `Final Score = (Vibe + Buzz + Taste) - Reality Penalty`.
+The core recommendation engine relies on a **two-tier priority weighting system**:
+
+### 스코어링 공식
+`Final Score = Base × CurationFocusMatch × VibeMatch + StyleBonus - RealityPenalty`
+
+### 1순위: Curation Focus (누구를 위한) - 0.3~1.5 배수
+사용자가 선택한 "누구를 위한"이 최우선 필터:
+- **아이(Kids)**: 아이 친화적 장소 보너스, 바/술집 등 부적합 장소 70% 감점
+- **부모님(Parents)**: 접근성/편안함 중심, 계단/도보 많은 곳 70% 감점
+- **모두(Everyone)**: 균형 잡힌 추천
+- **나(Self)**: 개인 취향 반영
+
+### 2순위: Vibe (무엇을) - 0.5~1.5 배수
+선택 순서에 따른 가중치:
+- 1개 선택: 100%
+- 2개 선택: 60% / 40%
+- 3개 선택: 50% / 30% / 20%
+
+### Base Score 구성
 - **Vibe Score**: Uses Gemini Vision for visual appeal analysis of photos.
 - **Buzz Score**: Aggregates popularity from multiple sources (Google, TripAdvisor).
 - **Taste Verify Score**: An original algorithm based on language-based authenticity from reviews, expert ratings, and global averages.
