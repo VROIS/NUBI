@@ -881,7 +881,7 @@
         
         const ytEl = document.getElementById('youtube-channels');
         ytEl.innerHTML = channels.length ? channels.map(c => `
-          <div class="channel-item">
+          <div class="channel-item" style="display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 8px;">
             <div class="channel-info">
               <div class="channel-thumb"></div>
               <div>
@@ -890,6 +890,8 @@
               </div>
             </div>
             <span class="trust-weight">${c.trustWeight.toFixed(1)}</span>
+            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick='editYoutubeChannel(${JSON.stringify(c)})'>수정</button>
+            <button class="btn" style="padding: 4px 10px; font-size: 12px; background: rgba(239,68,68,0.2); color: #ef4444;" onclick="deleteYoutubeChannel(${c.id}, '${c.channelName.replace(/'/g, "\\'")}')">삭제</button>
           </div>
         `).join('') : '<div class="empty-state">등록된 채널이 없습니다</div>';
         
@@ -902,7 +904,7 @@
         
         const blogEl = document.getElementById('blog-sources');
         blogEl.innerHTML = blogs.length ? blogs.map(b => `
-          <div class="channel-item">
+          <div class="channel-item" style="display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 8px;">
             <div class="channel-info">
               <div>
                 <div class="channel-name">${b.sourceName}</div>
@@ -910,6 +912,8 @@
               </div>
             </div>
             <span class="trust-weight">${b.trustWeight.toFixed(1)}</span>
+            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick='editBlogSource(${JSON.stringify(b)})'>수정</button>
+            <button class="btn" style="padding: 4px 10px; font-size: 12px; background: rgba(239,68,68,0.2); color: #ef4444;" onclick="deleteBlogSource(${b.id}, '${b.sourceName.replace(/'/g, "\\'")}')">삭제</button>
           </div>
         `).join('') : '<div class="empty-state">등록된 블로그 소스가 없습니다</div>';
         
@@ -1501,6 +1505,64 @@
         }
       } catch (err) {
         alert('소스 추가에 실패했습니다');
+      }
+    }
+    
+    // YouTube 채널 수정/삭제
+    function editYoutubeChannel(channel) {
+      const newName = prompt('채널명 수정:', channel.channelName);
+      if (!newName || newName === channel.channelName) return;
+      
+      const newTrust = prompt('신뢰도 (0.1~2.0):', channel.trustWeight);
+      const trustVal = parseFloat(newTrust) || channel.trustWeight;
+      
+      fetch(`${API_BASE}/youtube-channels/${channel.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channelName: newName, trustWeight: trustVal })
+      }).then(res => {
+        if (res.ok) loadSources();
+        else alert('수정에 실패했습니다');
+      }).catch(() => alert('수정 중 오류'));
+    }
+    
+    async function deleteYoutubeChannel(id, name) {
+      if (!confirm(`"${name}" 채널을 삭제하시겠습니까?`)) return;
+      try {
+        const res = await fetch(`${API_BASE}/youtube-channels/${id}`, { method: 'DELETE' });
+        if (res.ok) loadSources();
+        else alert('삭제에 실패했습니다');
+      } catch (err) {
+        alert('삭제 중 오류');
+      }
+    }
+    
+    // 블로그 소스 수정/삭제
+    function editBlogSource(blog) {
+      const newName = prompt('소스명 수정:', blog.sourceName);
+      if (!newName || newName === blog.sourceName) return;
+      
+      const newTrust = prompt('신뢰도 (0.1~2.0):', blog.trustWeight);
+      const trustVal = parseFloat(newTrust) || blog.trustWeight;
+      
+      fetch(`${API_BASE}/blog-sources/${blog.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceName: newName, trustWeight: trustVal })
+      }).then(res => {
+        if (res.ok) loadSources();
+        else alert('수정에 실패했습니다');
+      }).catch(() => alert('수정 중 오류'));
+    }
+    
+    async function deleteBlogSource(id, name) {
+      if (!confirm(`"${name}" 소스를 삭제하시겠습니까?`)) return;
+      try {
+        const res = await fetch(`${API_BASE}/blog-sources/${id}`, { method: 'DELETE' });
+        if (res.ok) loadSources();
+        else alert('삭제에 실패했습니다');
+      } catch (err) {
+        alert('삭제 중 오류');
       }
     }
     
