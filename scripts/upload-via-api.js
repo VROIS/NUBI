@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// Supabase config
-const SUPABASE_URL = 'https://wxebceflvuythuodemro.supabase.co';
+// Supabase config - 환경변수에서만 로드
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_qo2wJfiFVVlps0WXjYIfBg_SiU98cVD';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 // Use service key if available, otherwise anon key
 const API_KEY = SUPABASE_SERVICE_KEY || SUPABASE_ANON_KEY;
