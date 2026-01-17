@@ -187,20 +187,24 @@ function configureExpoAndLanding(app: express.Application) {
       return serveExpoManifest(platform, res);
     }
 
-    if (req.path === "/") {
-      return res.json({
-        app: appName,
-        status: "running",
-        message: "VibeTrip API Server",
-        endpoints: {
-          api: "/api",
-          expoApp: "포트 8081에서 Expo 앱 실행 중"
-        }
-      });
-    }
-
     next();
   });
+
+  // Expo 웹 빌드 서빙 (dist 폴더)
+  const distPath = path.resolve(process.cwd(), "dist");
+  if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    // SPA 라우팅: 모든 경로에서 index.html 반환
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api")) return next();
+      const indexPath = path.join(distPath, "index.html");
+      if (fs.existsSync(indexPath)) {
+        return res.sendFile(indexPath);
+      }
+      next();
+    });
+    log("✅ Serving Expo web build from /dist");
+  }
 
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
   app.use(express.static(path.resolve(process.cwd(), "static-build")));

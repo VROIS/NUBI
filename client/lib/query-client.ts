@@ -24,17 +24,9 @@ export function getApiUrl(): string {
     return `http://${host}`;
   }
 
-  // 환경변수가 없으면 플랫폼에 따라 자동 설정
-  // 웹 브라우저: localhost 사용
-  // 모바일 기기: 네트워크 IP 사용 (같은 WiFi 필요)
-  if (Platform.OS === "web") {
-    return "http://localhost:8082";
-  } else {
-    // 모바일 기기에서는 네트워크 IP 사용
-    // 기본값: 192.168.1.23 (개발 환경에서 수정 필요)
-    // 또는 환경변수로 설정: EXPO_PUBLIC_DOMAIN=192.168.1.23:8082
-    return "http://192.168.1.23:8082";
-  }
+  // 배포된 Render 서버 사용 (기본값)
+  // 로컬 개발시: EXPO_PUBLIC_DOMAIN=localhost:8082
+  return "https://nubi-4w9y.onrender.com";
 }
 
 async function throwIfResNotOk(res: Response) {
